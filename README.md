@@ -1,591 +1,423 @@
-# TaskFlow — Developer Productivity Dashboard & REST API
+# TaskFlow
+
+> **TaskFlow is a developer productivity workspace that combines project management, task management, productivity intelligence, and a personal AI assistant.**
+
+[![React](https://img.shields.io/badge/React-18.3-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Three.js](https://img.shields.io/badge/Three.js-0.186-black?style=flat-square&logo=three.js&logoColor=white)](https://threejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Express.js](https://img.shields.io/badge/Express-4.19-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
+[![MongoDB Atlas](https://img.shields.io/badge/MongoDB-Atlas_Mongoose-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com/atlas)
+[![Google Gemini](https://img.shields.io/badge/Gemini_API-3.5_Flash_Lite-4285F4?style=flat-square&logo=google&logoColor=white)](https://aistudio.google.com/)
+[![Demo Video](https://img.shields.io/badge/Demo_Video-Google_Drive-red?style=flat-square&logo=google-drive&logoColor=white)](https://drive.google.com/drive/folders/1lOcsKDX4hQXeIiA8OGPUns1Zn0E2vgxJ?usp=sharing)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+
+---
+
+## 🎯 The Core Product Concept
+
+$$\Large\textbf{Goal} \longrightarrow \textbf{Plan} \longrightarrow \textbf{Prioritize} \longrightarrow \textbf{Execute}$$
+
+Engineering teams lose hours every sprint context-switching between disconnected roadmaps, backlog trackers, and developer documentation. TaskFlow bridges this gap by unifying full-stack task execution with server-orchestrated AI productivity intelligence.
+
+```bash
+# Clone and launch in under 60 seconds
+git clone https://github.com/Priyan120-dev/TaskFlow-developer-productivity-dashboard.git
+cd TaskFlow-developer-productivity-dashboard && npm install && cd taskflow-api && npm install && cd ..
+```
+
+---
+
+## 📑 Table of Contents
+
+1. [Overview](#1-overview)
+2. [Key Features](#2-key-features)
+3. [AI Capabilities](#3-ai-capabilities)
+4. [Tech Stack](#4-tech-stack)
+5. [Architecture Overview](#5-architecture-overview)
+6. [Project Structure](#6-project-structure)
+7. [Authentication & Authorization](#7-authentication--authorization)
+8. [Database & Data Models](#8-database--data-models)
+9. [REST API](#9-rest-api)
+10. [Local Setup Guide](#10-local-setup-guide)
+11. [Environment Variables](#11-environment-variables)
+12. [Running Frontend](#12-running-frontend)
+13. [Running Backend](#13-running-backend)
+14. [AI Configuration & Failover](#14-ai-configuration--failover)
+15. [Deployment (Render & Atlas)](#15-deployment)
+16. [Screenshots](#16-screenshots)
+17. [Demo & Presentation Script](#17-demo)
+18. [Security](#18-security)
+19. [Future Improvements](#19-future-improvements)
+20. [Author & Acknowledgments](#20-author)
+
+---
+
+## 1. Overview
+
+TaskFlow is an enterprise-grade developer workspace designed for the **Innovation Hacks Full Stack Development Internship**. It integrates an interactive React dashboard with an Express REST service, cloud-native MongoDB Atlas persistence, and Google Gemini Generative AI capabilities.
+
+Rather than treating AI as a detached chatbot, TaskFlow ingests authorized live workspace data to calculate real-time priority briefings, decompose engineering goals into actionable milestone roadmaps, and propose safe database actions guarded by developer confirmation.
+
+---
+
+## 2. Key Features
+
+| Capability | Technical Implementation |
+|---|---|
+| **JWT Authentication** | Secure token issuance, 7-day expiration, bcrypt password hashing (10 salt rounds). |
+| **Protected Route Guards** | React Router client-side redirection with server-side Bearer verification. |
+| **Project CRUD** | Complete initiative lifecycle management with custom color tags and deadline dates. |
+| **Task CRUD** | Granular work-item management with status (`todo`, `in-progress`, `done`) and priority (`low`, `medium`, `high`). |
+| **Multi-Dimensional Filters** | Simultaneous real-time filtering across text search, status pills, and priority badges. |
+| **Dynamic Dashboard KPIs** | Live aggregations calculating total initiatives, active workload, and completion velocity. |
+| **Overdue Intelligence** | Automated detection and visual urgency highlighting for tasks exceeding target deadlines. |
+| **3D Cyber-Tech Login** | Procedural WebGL 3D scene using Three.js with metallic floor, rotating orbits, and floating developer icons. |
+| **Custom Logo Branding** | Distinctive geometric logo mark deployed consistently across all Copilot modals, triggers, and cards. |
+| **Cloud Persistence** | Zero mock-data dependencies; all entities persist to a live MongoDB Atlas cluster. |
+
+---
+
+## 3. AI Capabilities
+
+TaskFlow incorporates three production-grade AI capabilities powered by Google Gemini:
+
+### 🎯 A. AI Goal → Complete Task Plan (`POST /api/ai/plan`)
+- Converts unstructured engineering goals into an ordered milestone roadmap.
+- Emits task titles, technical descriptions, milestone priorities, and estimated hours.
+- **Human-in-the-Loop Review**: Developer inspects and edits tasks before batch-persisting them to MongoDB Atlas.
+
+### ⚡ B. AI Daily Focus & Priority Briefing (`GET /api/ai/daily-focus`)
+- Ingests active tasks owned by the authenticated user to formulate an executive morning briefing.
+- Highlights top 1–3 critical deliverables with concrete rationale (*Why now?*) and recommended immediate actions.
+- **Anti-Hallucination Guard**: Server validates all AI-recommended task IDs against real MongoDB records.
+
+### 💬 C. TaskFlow AI Copilot (`POST /api/ai/copilot`)
+- Personal assistant specializing in full-stack architecture, debugging, and task breakdown.
+- Contextually routes queries between general technical documentation and authorized live workspace data.
+- **Guarded Action Proposal Pattern**: When asked to create projects or tasks, Copilot generates structured action proposals (`requiresConfirmation: true`). Database mutation occurs **only** when the user clicks **Confirm & Create**.
+
+👉 *Deep dive documentation: [docs/AI_FEATURES.md](docs/AI_FEATURES.md)*
+
+---
+
+## 4. Tech Stack
+
+### Frontend Client
+- **Core**: React 18.3, Vite 5.4, JavaScript (ES2022)
+- **Styling**: Tailwind CSS 3.4 (Custom dark slate and indigo design system)
+- **3D Graphics**: Three.js 0.186 (WebGL scene, orbital tracks, procedural geometries)
+- **Routing & Networking**: React Router DOM 6.22, Axios 1.7
+- **Icons**: Custom SVG system with official Copilot branding symbol
+
+### Backend Service (`taskflow-api`)
+- **Runtime**: Node.js 18+ LTS, Express 4.19
+- **Database & ODM**: MongoDB Atlas, Mongoose 8.3
+- **Authentication**: JSON Web Token (`jsonwebtoken` 9.0), `bcryptjs` 3.0
+- **AI Integration**: Google GenAI REST API (`gemini-3.5-flash-lite`)
+- **Utilities**: CORS, Dotenv, UUID
+
+---
+
+## 5. Architecture Overview
+
+```mermaid
+flowchart LR
+    subgraph Frontend["Frontend (Port 5173)"]
+        React["React 18 SPA"]
+        Three["Three.js 3D Engine"]
+        AuthContext["AuthContext"]
+    end
+
+    subgraph Backend["Backend API (Port 5000)"]
+        Express["Express Server"]
+        AuthMid["JWT Auth Middleware"]
+        Controllers["Resource Controllers"]
+        GeminiSvc["Gemini Service"]
+    end
+
+    subgraph Storage["Cloud Data & AI"]
+        Atlas[("MongoDB Atlas")]
+        Gemini["Google Gemini API"]
+    end
+
+    React --> AuthContext
+    Three --> React
+    AuthContext -->|Bearer JWT| Express
+    Express --> AuthMid
+    AuthMid --> Controllers
+    Controllers --> Atlas
+    Controllers --> GeminiSvc
+    GeminiSvc --> Gemini
+```
+
+### Critical Architecture Rule
+$$\textbf{Gemini NEVER directly modifies MongoDB.}$$
+All AI mutations follow: **AI Proposes &rarr; User Decides &rarr; Authorized REST APIs Execute.**
+
+👉 *Full architecture documentation: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)*
+
+---
+
+## 6. Project Structure
+
+```text
+TaskFlow/
+├── public/                       # Static public assets & Copilot logo symbols
+├── screenshots/                  # High-resolution application screenshots
+├── src/                          # React frontend application
+│   ├── assets/                   # Bundled branding images
+│   ├── components/               # Reusable UI, modals, 3D WebGL scenes, icons
+│   ├── context/                  # AuthContext and session state
+│   ├── pages/                    # Route pages (Login, Register, Dashboard, Projects, Tasks)
+│   ├── services/                 # Axios API client and route endpoints
+│   ├── App.jsx                   # Application layout shell & global Copilot trigger
+│   └── main.jsx                  # React DOM mount point
+├── docs/                         # In-depth architectural documentation
+│   ├── ARCHITECTURE.md           # Full-stack architecture & data flow diagrams
+│   ├── AI_FEATURES.md            # Deep dive on AI capabilities & prompt architecture
+│   ├── DEPLOYMENT.md             # Production guide for Render & Atlas
+│   └── DEMO_GUIDE.md             # 3-5 minute presentation script
+├── taskflow-api/                 # Express backend REST service
+│   ├── src/
+│   │   ├── config/               # Database connection lifecycle
+│   │   ├── controllers/          # Business logic (Auth, Projects, Tasks, Stats, AI)
+│   │   ├── middleware/           # JWT verification & error shielding
+│   │   ├── models/               # Mongoose schemas (User, Project, Task)
+│   │   ├── routes/               # Express route declarations
+│   │   ├── services/             # Gemini API service & payload sanitizers
+│   │   └── server.js             # Express application listener
+│   ├── docs/
+│   │   └── api.md                # Comprehensive REST API reference
+│   ├── package.json
+│   └── README.md
+├── CONTRIBUTING.md               # Development & pull request guidelines
+├── SECURITY.md                   # Security controls & disclosure policy
+├── CHANGELOG.md                  # Milestone evolution history
+└── package.json                  # Frontend dependencies & scripts
+```
+
+---
+
+## 7. Authentication & Authorization
+
+- **Password Storage**: Passwords are salted and hashed using `bcryptjs` with 10 rounds. Plaintext passwords never touch the database.
+- **Token Mechanism**: Standard stateless JWT tokens signed with `JWT_SECRET`. Tokens include user ID, email, and role.
+- **Route Protection**: Unauthenticated requests are intercepted by `ProtectedRoute.jsx` on the client and `auth.middleware.js` on the server.
+- **Ownership Scoping**: All database queries for write operations strictly filter by `req.user.id`. The server ignores client-supplied `ownerId` values.
+
+---
+
+## 8. Database & Data Models
+
+### Mongoose Relationships
+- **User &rarr; Projects**: One-to-Many (`Project.owner` references `User._id`).
+- **Project &rarr; Tasks**: One-to-Many (`Task.project` references `Project._id`).
+- **User &rarr; Tasks**: One-to-Many (`Task.assignee` and `Task.createdBy` reference `User._id`).
+
+### Seed Data
+The database seeder initializes default developer credentials:
+- **Email**: `alex@taskflow.dev`
+- **Password**: `password123`
+- **Role**: `developer`
+- **Pre-populated Entities**: 3 starter initiatives and 5 milestone deliverables.
+
+---
+
+## 9. REST API
+
+| Endpoint | Method | Access | Description |
+|---|---|:---:|---|
+| `/api/health` | `GET` | Public | System status, database connection, timestamp. |
+| `/api/auth/register` | `POST` | Public | Register new user and receive JWT. |
+| `/api/auth/login` | `POST` | Public | Authenticate user and receive JWT. |
+| `/api/auth/me` | `GET` | Protected | Fetch authenticated user profile. |
+| `/api/projects` | `GET`, `POST` | Protected | Query and create user projects. |
+| `/api/projects/:id` | `GET`, `PUT`, `DELETE` | Protected | Read, update, and cascading delete projects. |
+| `/api/tasks` | `GET`, `POST` | Protected | Query (with filters) and create tasks. |
+| `/api/tasks/:id` | `GET`, `PUT`, `DELETE` | Protected | Read, update status/priority, delete tasks. |
+| `/api/stats` | `GET` | Protected | Compute workspace metrics and completion velocity. |
+| `/api/ai/plan` | `POST` | Protected | Decompose goals into milestone roadmap. |
+| `/api/ai/daily-focus` | `GET` | Protected | Generate AI executive morning briefing. |
+| `/api/ai/copilot` | `POST` | Protected | Copilot conversational Q&A and action proposals. |
+
+👉 *Full API Reference: [taskflow-api/docs/api.md](taskflow-api/docs/api.md)*
+
+---
+
+## 10. Local Setup Guide
+
+### Prerequisites
+- Node.js v18.0.0 or higher
+- npm v9.0.0 or higher
+- MongoDB Atlas cluster connection string
+- Google Gemini API key ([Google AI Studio](https://aistudio.google.com/))
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Priyan120-dev/TaskFlow-developer-productivity-dashboard.git
+cd TaskFlow-developer-productivity-dashboard
+
+# 2. Install frontend dependencies
+npm install
+
+# 3. Install backend dependencies
+cd taskflow-api
+npm install
+cd ..
+```
+
+---
+
+## 11. Environment Variables
+
+### Frontend Configuration (`.env`)
+Create `.env` in the project root:
+```env
+VITE_APP_NAME=TaskFlow
+VITE_APP_VERSION=1.0.0
+VITE_API_URL=http://localhost:5000/api
+```
+
+### Backend Configuration (`taskflow-api/.env`)
+Create `.env` inside `taskflow-api/`:
+```env
+PORT=5000
+NODE_ENV=development
+CORS_ORIGIN=http://localhost:5173
+JWT_SECRET=your_jwt_secret_key_minimum_32_characters
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/taskflow?retryWrites=true&w=majority
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-3.5-flash-lite
+```
+
+> [!NOTE]
+> Example templates (`.env.example`) contain only placeholders. Never commit actual connection strings or secrets.
+
+---
+
+## 12. Running Frontend
+
+From the root directory:
+```bash
+npm run dev
+```
+The React development server launches at `http://localhost:5173`.
+
+To build the production bundle:
+```bash
+npm run build
+```
+
+---
+
+## 13. Running Backend
+
+From the root directory, open a new terminal:
+```bash
+cd taskflow-api
+
+# Seed the initial database (runs once)
+npm run seed
+
+# Start server in development mode
+npm run dev
+```
+The Express REST service starts at `http://localhost:5000`.
+
+---
+
+## 14. AI Configuration & Failover
+
+TaskFlow connects to Google Gemini using direct server-side REST requests to the official `generateContent` v1beta endpoint:
+- **Active Model**: `gemini-3.5-flash-lite` (Configurable via `GEMINI_MODEL`).
+- **Failover Sequence**: `gemini-3.5-flash-lite` &rarr; `gemini-3.1-flash-lite` &rarr; `gemini-flash-lite-latest` &rarr; `gemini-flash-latest` &rarr; `gemini-3.6-flash`.
+- **Payload Sanitization**: The server helper `buildGeminiContents` guarantees strictly alternating user/model turns, discards empty parts, and enforces non-empty `text` strings, completely eliminating protobuf uninitialized field errors.
+
+---
+
+## 15. Deployment
+
+TaskFlow is optimized for production deployment on **Render** and **MongoDB Atlas**:
+- **Frontend**: Render Static Site (Build command: `npm install && chmod +x node_modules/.bin/vite && npm run build`, Publish directory: `dist`, SPA Rewrite: `/*` &rarr; `/index.html`).
+- **Backend**: Render Web Service (Root directory: `taskflow-api`, Build: `npm install`, Start: `npm start`).
+- **Database**: MongoDB Atlas M0 Free Cluster.
+- **Infrastructure as Code**: Automated Blueprint deployment via [`render.yaml`](render.yaml).
+
+👉 *Complete step-by-step production deployment guide: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)*
+
+---
+
+## 16. Screenshots
 
 <div align="center">
 
-[![React](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
-[![Express.js](https://img.shields.io/badge/Express.js-4.19-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
-[![Build Status](https://img.shields.io/badge/Build-Passing-10B981?style=for-the-badge&logo=checkmarx&logoColor=white)](https://github.com/)
+### 3D Cyber-Tech Futuristic Login
+![TaskFlow 3D Login](screenshots/login-3d.png)
 
-<p align="center">
-  <b>A responsive Developer Productivity Dashboard and robust REST API engineered for high-performance engineering teams to monitor sprints, track deliverables, manage project velocity, and synchronize task workflows in real time.</b>
-</p>
-
-*Built for the Innovation Hacks Full Stack Development Internship Evaluation.*
-
-</div>
-
----
-
-## Table of Contents
-- [Visual Preview](#visual-preview)
-- [Project Overview](#project-overview)
-- [Demo Video](#demo-video)
-- [Internship Evaluation Compliance](#internship-evaluation-compliance)
-- [Technologies Used](#technologies-used)
-- [Folder Structure](#folder-structure)
-- [Setup & Installation](#setup--installation)
-- [Environment Variables](#environment-variables)
-- [Backend REST API Documentation](#backend-rest-api-documentation)
-  - [Base URL & Authentication](#base-url--authentication)
-  - [Endpoints Matrix](#endpoints-matrix)
-  - [Request & Response Examples](#request--response-examples)
-  - [Task Status & Priority Management](#task-status--priority-management)
-  - [Validation & Error Handling](#validation--error-handling)
-  - [HTTP Status Codes](#http-status-codes)
-- [Testing Instructions](#testing-instructions)
-  - [Backend API Testing (cURL)](#backend-api-testing-curl)
-  - [Frontend Testing Guide](#frontend-testing-guide)
-- [Component Architecture & State Flow](#component-architecture--state-flow)
-- [GitHub Repository Information](#github-repository-information)
-- [Author & Credits](#author--credits)
-
----
-
-## Visual Preview
-
-### Desktop Dashboard View
+### Developer Productivity Dashboard & AI Daily Focus
 ![TaskFlow Dashboard](screenshots/dashboard.png)
 
-<div align="center">
+### TaskFlow AI Copilot with Custom Branding
+![TaskFlow AI Copilot](screenshots/copilot.png)
 
-| Projects Explorer | Tasks & Overdue Tracker | Mobile Responsive (375px) |
-| :---: | :---: | :---: |
+### AI Goal → Complete Task Planner
+![TaskFlow AI Planner](screenshots/ai-planner.png)
+
+| Projects Explorer | Tasks Board | Mobile Responsive (375px) |
+|:---:|:---:|:---:|
 | ![Projects Page](screenshots/projects.png) | ![Tasks Page](screenshots/tasks.png) | ![Mobile View](screenshots/mobile.png) |
 
 </div>
 
 ---
 
-## Project Overview
+## 17. Demo
 
-TaskFlow is an end-to-end full-stack developer productivity platform developed across two structured milestones:
+### 🎥 Demo Video Access
+Watch the full recorded demonstration of TaskFlow featuring the 3D WebGL login, interactive dashboard, manual CRUD, and all three Google Gemini AI workflows:
+👉 **[Watch TaskFlow Demo Video on Google Drive](https://drive.google.com/drive/folders/1lOcsKDX4hQXeIiA8OGPUns1Zn0E2vgxJ?usp=sharing)**
 
-1. **Task 1 — Frontend Web Application**: A React 18 + Vite dashboard with dynamic metric computations, multi-dimensional filtering (search + status + priority), deadline intelligence with overdue detection, responsive navigation layouts, and animated skeleton loaders.
-2. **Task 2 — Backend & REST API Service**: A modular Node.js + Express REST API (`taskflow-api`) featuring an in-memory data store, token-based authentication middleware, request body schema validation, project task count enrichment, cascading project deletion, and multi-filter task queries.
+### 3-Minute Live Presentation Track
+1. **3D Login**: Showcase procedural Three.js WebGL scene with floating developer artifacts. Log in with `alex@taskflow.dev`.
+2. **Dashboard**: Demonstrate real-time metric cards and the AI Daily Focus briefing.
+3. **AI Task Planner**: Enter a natural language goal, review the generated roadmap, and click *Add All Tasks to Workspace*.
+4. **TaskFlow Copilot**: Open Copilot, ask a technical question, then request: *"Create a project called Cloud Infrastructure"*. Show the confirmation-guarded action card.
+5. **Persistence Check**: Refresh browser to verify zero data loss from MongoDB Atlas.
 
----
-
-## Demo Video
-
-<!-- Replace the link below with your hosted demonstration recording -->
-- **Walkthrough Demo Video**: [Watch TaskFlow Full Stack Demo (Loom / YouTube)](#)
-
-> [!NOTE]
-> *A full video walkthrough demonstrating both the interactive React dashboard and the backend REST API endpoints in action.*
+👉 *Read the full word-for-word presentation script: [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md)*
 
 ---
 
-## Internship Evaluation Compliance
+## 18. Security
 
-### Task 1 — Frontend Deliverables
+- **Server-Side API Key Isolation**: `GEMINI_API_KEY` is strictly confined to the backend. It never reaches client bundles.
+- **Zero Automated Mutations**: Copilot never writes to the database without explicit user confirmation.
+- **Input Sanitization**: Mongoose schema casting and ObjectId regex validation prevent injection attacks.
+- **Zero Secrets Committed**: Verified clean Git history with automated gitignore rules.
 
-| # | Requirement | Status | File Reference |
-| :-: | :--- | :--: | :--- |
-| **1** | **Clean URL Routing** (`react-router-dom`) with `/` redirecting to `/dashboard` | Verified | [`src/App.jsx`](src/App.jsx) |
-| **2** | **TypeScript Interfaces** (`User`, `Project`, `Task`, `Activity`, `TaskStatus`, etc.) | Verified | [`src/types/index.ts`](src/types/index.ts) |
-| **3** | **Environment Configuration** (`.env.example` and `.env`) | Verified | [`.env.example`](.env.example) |
-| **4** | **Documentation Integrity** (Tech Stack, Quick Start, Folder Hierarchy) | Verified | [`README.md`](README.md) |
-| **5** | **Computed Stats Engine** (Projects, Tasks, Completed, In-Progress derived from data) | Verified | [`src/pages/DashboardPage.jsx`](src/pages/DashboardPage.jsx) |
-| **6** | **Overdue Card Highlighting** (`border-l-4 border-red-500` + red "Overdue" badge) | Verified | [`src/components/TaskCard.jsx`](src/components/TaskCard.jsx) |
-| **7** | **Dynamic Project Filter Badges** (`All (4)`, `Active (2)`, `Completed (1)`, `On Hold (1)`) | Verified | [`src/pages/ProjectsPage.jsx`](src/pages/ProjectsPage.jsx) |
-| **8** | **Dynamic Task Filter Badges** (Status counts and Priority counts) | Verified | [`src/pages/TasksPage.jsx`](src/pages/TasksPage.jsx) |
-| **9** | **Simultaneous Multi-Filter Conjunction** (Search + Status + Priority) | Verified | [`src/pages/TasksPage.jsx`](src/pages/TasksPage.jsx) |
-| **10** | **Activity Type SVG Mapping** (`create`=green plus, `update`=blue pencil, `complete`=check, `delete`=trash) | Verified | [`src/components/Icons.jsx`](src/components/Icons.jsx) |
-
-### Task 2 — Backend & REST API Deliverables
-
-| # | Requirement | Status | File Reference |
-| :-: | :--- | :--: | :--- |
-| **1** | **Separate Backend Directory** (`taskflow-api`) with Express + Node.js | Verified | [`taskflow-api/src/server.js`](taskflow-api/src/server.js) |
-| **2** | **In-Memory Seed Store** (Preloaded users, projects, and tasks) | Verified | [`taskflow-api/src/data/store.js`](taskflow-api/src/data/store.js) |
-| **3** | **Authentication & Token Middleware** (Bearer token validation, 401 protection) | Verified | [`taskflow-api/src/middleware/auth.middleware.js`](taskflow-api/src/middleware/auth.middleware.js) |
-| **4** | **Schema & Input Validation** (Factory middleware returning 400 on failure) | Verified | [`taskflow-api/src/middleware/validate.js`](taskflow-api/src/middleware/validate.js) |
-| **5** | **User Registration & Login** (Email conflict check 409, credentials check 401) | Verified | [`taskflow-api/src/controllers/auth.controller.js`](taskflow-api/src/controllers/auth.controller.js) |
-| **6** | **Project Metric Enrichment** (`taskCount` & `completedTasks` dynamically computed) | Verified | [`taskflow-api/src/controllers/project.controller.js`](taskflow-api/src/controllers/project.controller.js) |
-| **7** | **Cascading Project Deletion** (Deleting a project removes all child tasks) | Verified | [`taskflow-api/src/controllers/project.controller.js`](taskflow-api/src/controllers/project.controller.js) |
-| **8** | **Multi-Filter Task Queries** (Simultaneous filtering: `projectId`, `status`, `priority`, `search`) | Verified | [`taskflow-api/src/controllers/task.controller.js`](taskflow-api/src/controllers/task.controller.js) |
-| **9** | **Project Foreign Key Validation** (Creating task validates `projectId` exists or returns 404) | Verified | [`taskflow-api/src/controllers/task.controller.js`](taskflow-api/src/controllers/task.controller.js) |
-| **10** | **Centralized Error & 404 Routing** (Predictable JSON error structure) | Verified | [`taskflow-api/src/middleware/errorHandler.js`](taskflow-api/src/middleware/errorHandler.js) |
-| **11** | **API Documentation Specification** (Dedicated markdown API spec file) | Verified | [`taskflow-api/docs/api.md`](taskflow-api/docs/api.md) |
+👉 *Read our comprehensive security policy: [SECURITY.md](SECURITY.md)*
 
 ---
 
-## Technologies Used
+## 19. Future Improvements
 
-### Frontend (Task 1)
-- **Framework**: [React 18](https://react.dev/) (Functional Components, Hooks)
-- **Build Tool**: [Vite 5](https://vitejs.dev/) (ESM, Fast HMR)
-- **Styling**: [Tailwind CSS 3](https://tailwindcss.com/) (Custom Design Tokens)
-- **Client Routing**: [React Router DOM v6](https://reactrouter.com/) (Browser navigation)
-- **Type Definitions**: TypeScript interfaces in [`src/types/index.ts`](src/types/index.ts)
-- **Icons**: Lightweight inline SVGs
-
-### Backend (Task 2)
-- **Runtime**: [Node.js](https://nodejs.org/) (v18.0.0+)
-- **Web Framework**: [Express.js 4](https://expressjs.com/)
-- **Cross-Origin Resource Sharing**: [CORS](https://www.npmjs.com/package/cors)
-- **Configuration**: [Dotenv](https://www.npmjs.com/package/dotenv)
-- **ID Generation**: [UUID](https://www.npmjs.com/package/uuid)
-- **Development Tooling**: [Nodemon](https://www.npmjs.com/package/nodemon)
+- [ ] **GitHub Webhook Integration**: Automated task status transitions linked to pull request merges.
+- [ ] **Team Workspaces & RBAC**: Granular role-based permissions (`admin`, `lead`, `contributor`).
+- [ ] **Sprint Velocity Charts**: Burn-down charts and time estimation accuracy tracking.
+- [ ] **WebSocket Real-Time Sync**: Multi-user live collaborative board updates.
 
 ---
 
-## Folder Structure
-
-```
-taskflow/
-├── screenshots/                     # UI verification screenshots
-│   ├── dashboard.png
-│   ├── projects.png
-│   ├── tasks.png
-│   └── mobile.png
-├── src/                             # [Task 1] Frontend Source Code
-│   ├── components/                  # Reusable UI components (TaskCard, ProjectCard, Badge, etc.)
-│   ├── pages/                       # Route views (DashboardPage, ProjectsPage, TasksPage)
-│   ├── data/                        # Frontend seed mock dataset (mockData.js)
-│   ├── types/                       # TypeScript interfaces (index.ts)
-│   ├── App.jsx                      # Main app shell and client routes
-│   ├── main.jsx                     # Vite root entrypoint
-│   └── index.css                    # Tailwind CSS directives
-├── taskflow-api/                    # [Task 2] Backend REST API Service
-│   ├── docs/
-│   │   └── api.md                   # Complete API specification document
-│   ├── src/
-│   │   ├── controllers/             # Request handlers (auth, user, project, task)
-│   │   ├── data/                    # In-memory data store (store.js)
-│   │   ├── middleware/              # Auth, validation, and error middlewares
-│   │   ├── routes/                  # Express route definitions
-│   │   ├── validators/              # Validation rule implementations
-│   │   ├── app.js                   # Express application setup
-│   │   └── server.js                # HTTP server listener (port 5000)
-│   ├── .env.example                 # Backend environment variable template
-│   ├── .gitignore                   # Ignores node_modules, .env, dist, logs
-│   ├── package.json                 # Backend dependencies and run scripts
-│   └── README.md                    # Backend documentation & quick start
-├── .env.example                     # Frontend environment variable template
-├── .gitignore                       # Root git ignore
-├── index.html                       # HTML application entry
-├── package.json                     # Frontend dependencies
-├── tailwind.config.js               # Tailwind design system tokens
-├── vite.config.js                   # Vite configuration
-└── README.md                        # Master repository documentation
-```
-
----
-
-## Setup & Installation
-
-### Prerequisites
-- **Node.js**: `v18.0.0` or higher
-- **npm**: `v9.0.0` or higher
-- **Git**: Installed and configured
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/Priyan120-dev/TaskFlow-developer-productivity-dashboard.git
-cd TaskFlow-developer-productivity-dashboard
-```
-
-### 2. Frontend Setup (Task 1)
-```bash
-# Install frontend dependencies
-npm install
-
-# Setup local environment
-cp .env.example .env
-
-# Launch Vite development server (port 5173)
-npm run dev
-```
-Access the frontend in your browser at: `http://localhost:5173`
-
-### 3. Backend Setup (Task 2)
-```bash
-# Navigate to backend directory
-cd taskflow-api
-
-# Install backend dependencies
-npm install
-
-# Setup local environment
-cp .env.example .env
-
-# Launch Express development server (port 5000)
-npm run dev
-```
-The API server will run at `http://localhost:5000/api`. Verify health: `http://localhost:5000/api/health`.
-
----
-
-## Environment Variables
-
-### Frontend (`.env`)
-| Variable | Default Value | Description |
-| :--- | :--- | :--- |
-| `VITE_APP_NAME` | `TaskFlow` | Display name of the application |
-| `VITE_APP_VERSION` | `1.0.0` | Semantic application build version |
-
-### Backend (`taskflow-api/.env`)
-| Variable | Default Value | Description |
-| :--- | :--- | :--- |
-| `PORT` | `5000` | Port for the Express REST API |
-| `NODE_ENV` | `development` | Server execution environment |
-| `CORS_ORIGIN` | `http://localhost:5173` | Allowed frontend origin for CORS |
-| `JWT_SECRET` | `taskflow_super_secret_key_change_in_production` | Secret key for JWT signing |
-
----
-
-## Backend REST API Documentation
-
-### Base URL & Authentication
-- **Base URL**: `http://localhost:5000/api`
-- **Protected Routes**: Require the HTTP header `Authorization: Bearer <token>`
-- **Mock Token**: `mock-jwt-token-user-1` (generated upon login)
-
-### Endpoints Matrix
-
-| Method | Endpoint | Query Params | Auth Required | Description |
-|--------|----------|--------------|:-------------:|-------------|
-| `GET` | `/api/health` | - | No | API health check & timestamp |
-| `POST` | `/api/auth/register` | - | No | Register a new user |
-| `POST` | `/api/auth/login` | - | No | Authenticate user & get token |
-| `GET` | `/api/users` | - | **Yes** | Retrieve all users (sanitized) |
-| `GET` | `/api/users/:id` | - | **Yes** | Retrieve single user by ID |
-| `GET` | `/api/projects` | `?search`, `?status` | No | List projects with `taskCount` & `completedTasks` |
-| `POST` | `/api/projects` | - | **Yes** | Create a new project |
-| `GET` | `/api/projects/:id` | - | No | Retrieve project by ID with task counts |
-| `PUT` | `/api/projects/:id` | - | **Yes** | Update project fields |
-| `DELETE` | `/api/projects/:id` | - | **Yes** | Delete project & cascade delete all child tasks |
-| `GET` | `/api/tasks` | `?projectId`, `?status`, `?priority`, `?search` | No | List & multi-filter tasks |
-| `POST` | `/api/tasks` | - | **Yes** | Create task (validates `projectId`) |
-| `GET` | `/api/tasks/:id` | - | No | Retrieve single task by ID |
-| `PUT` | `/api/tasks/:id` | - | **Yes** | Update task fields & `updatedAt` |
-| `DELETE` | `/api/tasks/:id` | - | **Yes** | Delete task by ID |
-
----
-
-### Request & Response Examples
-
-#### 1. Health Check
-- **Request**: `GET /api/health`
-- **Response `200 OK`**:
-```json
-{
-  "success": true,
-  "status": "ok",
-  "message": "TaskFlow API is running",
-  "timestamp": "2026-09-20T10:00:00.000Z"
-}
-```
-
-#### 2. Register User
-- **Request**: `POST /api/auth/register`
-```json
-{
-  "name": "Sarah Connor",
-  "email": "sarah@taskflow.dev",
-  "password": "password123"
-}
-```
-- **Response `201 Created`**:
-```json
-{
-  "success": true,
-  "message": "User registered successfully",
-  "data": {
-    "user": {
-      "id": "user-2",
-      "name": "Sarah Connor",
-      "email": "sarah@taskflow.dev",
-      "role": "developer",
-      "createdAt": "2026-09-20T10:05:00.000Z"
-    }
-  }
-}
-```
-
-#### 3. Login
-- **Request**: `POST /api/auth/login`
-```json
-{
-  "email": "alex@taskflow.dev",
-  "password": "password123"
-}
-```
-- **Response `200 OK`**:
-```json
-{
-  "success": true,
-  "message": "Login successful",
-  "data": {
-    "token": "mock-jwt-token-user-1",
-    "user": {
-      "id": "user-1",
-      "name": "Alex Kumar",
-      "email": "alex@taskflow.dev",
-      "role": "developer"
-    }
-  }
-}
-```
-
-#### 4. Get Projects (Enriched with Task Counts)
-- **Request**: `GET /api/projects?search=mobile&status=active`
-- **Response `200 OK`**:
-```json
-{
-  "success": true,
-  "data": {
-    "projects": [
-      {
-        "id": "proj-2",
-        "name": "Mobile App Redesign",
-        "description": "Complete UI/UX overhaul of the mobile application.",
-        "status": "active",
-        "color": "#8b5cf6",
-        "dueDate": "2026-11-30",
-        "ownerId": "user-1",
-        "createdAt": "2026-08-15T00:00:00.000Z",
-        "taskCount": 1,
-        "completedTasks": 0
-      }
-    ],
-    "total": 1
-  }
-}
-```
-
-#### 5. Create Task
-- **Request**: `POST /api/tasks` (`Authorization: Bearer mock-jwt-token-user-1`)
-```json
-{
-  "title": "Build WebSocket Notification Gateway",
-  "description": "Stream live task mutations to connected clients.",
-  "projectId": "proj-1",
-  "status": "todo",
-  "priority": "high",
-  "dueDate": "2026-10-30"
-}
-```
-- **Response `201 Created`**:
-```json
-{
-  "success": true,
-  "message": "Task created successfully",
-  "data": {
-    "task": {
-      "id": "task-4",
-      "title": "Build WebSocket Notification Gateway",
-      "description": "Stream live task mutations to connected clients.",
-      "projectId": "proj-1",
-      "status": "todo",
-      "priority": "high",
-      "dueDate": "2026-10-30",
-      "assigneeId": "user-1",
-      "createdAt": "2026-09-20T10:10:00.000Z",
-      "updatedAt": "2026-09-20T10:10:00.000Z"
-    }
-  }
-}
-```
-
-#### 6. Delete Project (Cascading Cleanup)
-- **Request**: `DELETE /api/projects/proj-1` (`Authorization: Bearer mock-jwt-token-user-1`)
-- **Response `200 OK`**:
-```json
-{
-  "success": true,
-  "message": "Project and its tasks deleted successfully"
-}
-```
-
----
-
-### Task Status & Priority Management
-
-TaskFlow enforces strict lifecycle state validation across all write operations:
-
-```
-Task Lifecycle:
-[ todo ] ──────> [ in-progress ] ──────> [ done ]
-```
-
-- **Allowed Task Statuses**:
-  - `todo` — Backlog / unstarted items (Default)
-  - `in-progress` — Active sprint tasks
-  - `done` — Completed deliverables
-- **Allowed Task Priorities**:
-  - `low` — Low impact / technical chore
-  - `medium` — Standard feature (Default)
-  - `high` — Critical path / sprint milestone
-- **Allowed Project Statuses**:
-  - `active` — In active execution (Default)
-  - `completed` — Delivered
-  - `on-hold` — Blocked or paused
-
----
-
-### Validation & Error Handling
-
-All write endpoints pass through the factory middleware [`src/middleware/validate.js`](taskflow-api/src/middleware/validate.js). If any field violates constraints, a descriptive `400 Bad Request` payload is returned without breaking execution:
-
-```json
-{
-  "success": false,
-  "message": "Validation failed",
-  "errors": [
-    "Title must be between 2 and 200 characters",
-    "Priority must be low, medium, or high"
-  ]
-}
-```
-
-### HTTP Status Codes
-
-| Code | Status | Usage in TaskFlow API |
-|:---:|:---|:---|
-| `200` | **OK** | Successful `GET`, `PUT`, or `DELETE` request |
-| `201` | **Created** | Successful resource creation via `POST` |
-| `400` | **Bad Request** | Input validation failure (missing/invalid fields) |
-| `401` | **Unauthorized** | Missing or malformed Bearer authorization token |
-| `404` | **Not Found** | Resource (user, project, task) or route does not exist |
-| `409` | **Conflict** | Duplicate registration attempt with an existing email |
-| `500` | **Internal Server Error** | Unexpected unhandled server exception |
-
----
-
-## Testing Instructions
-
-### Backend API Testing (cURL)
-
-With the backend running on `http://localhost:5000`, run the following commands:
-
-```bash
-# 1. Health check
-curl http://localhost:5000/api/health
-
-# 2. Register user
-curl -X POST http://localhost:5000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Alex Kumar","email":"alex.dev@taskflow.dev","password":"password123"}'
-
-# 3. Login
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"alex@taskflow.dev","password":"password123"}'
-
-# 4. Get all projects (enriched with taskCount & completedTasks)
-curl http://localhost:5000/api/projects
-
-# 5. Search & filter projects
-curl "http://localhost:5000/api/projects?search=mobile&status=active"
-
-# 6. Create project (Protected)
-curl -X POST http://localhost:5000/api/projects \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer mock-jwt-token-user-1" \
-  -d '{"name":"Security Hardening","description":"Implement rate limiting and CSP headers"}'
-
-# 7. Multi-filter tasks (Search + Status + Priority + ProjectId)
-curl "http://localhost:5000/api/tasks?projectId=proj-1&status=done&priority=high"
-
-# 8. Create task (Protected, validates projectId)
-curl -X POST http://localhost:5000/api/tasks \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer mock-jwt-token-user-1" \
-  -d '{"title":"Implement Redis cache","projectId":"proj-1","priority":"high"}'
-
-# 9. Update task status
-curl -X PUT http://localhost:5000/api/tasks/task-1 \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer mock-jwt-token-user-1" \
-  -d '{"status":"done"}'
-
-# 10. Cascading delete project
-curl -X DELETE http://localhost:5000/api/projects/proj-1 \
-  -H "Authorization: Bearer mock-jwt-token-user-1"
-```
-
-### Frontend Testing Guide
-
-1. **Navigation Flow**:
-   - Visit `http://localhost:5173/` → Automatically redirects to `/dashboard`.
-   - Click **Projects** → Route transitions to `/projects` with active blue styling.
-   - Click **Tasks** → Route transitions to `/tasks` with active blue styling.
-
-2. **Real-Time Instant Search & Combined Filtering**:
-   - On `/projects`: Filter by typing in the search box; matches filter in real time.
-   - On `/tasks`: Combine search term, status chip, and priority chip simultaneously. If zero items match, click **"Reset Filters"** to restore.
-
-3. **Overdue Item Intelligence**:
-   - Items where `dueDate < new Date() && status !== 'done'` display a left red border (`border-l-4 border-red-500`) and a red **"Overdue"** badge.
-
----
-
-## Component Architecture & State Flow
-
-```mermaid
-graph TD
-    subgraph Frontend ["Frontend (Task 1) - React + Vite"]
-        A[mockData.js / State Store] --> B[App Shell / Router]
-        B --> C[DashboardPage]
-        B --> D[ProjectsPage]
-        B --> E[TasksPage]
-        
-        C --> C1[StatsCard - Computed]
-        C --> C2[ProjectCard Grid]
-        C --> C3[Recent Tasks List]
-        C --> C4[Activity Feed]
-        
-        D --> D1[SearchBar & Filters]
-        D --> D2[ProjectCard Grid]
-        
-        E --> E1[Multi-Filter Conjunction]
-        E --> E2[TaskCard with Overdue Engine]
-    end
-
-    subgraph Backend ["Backend (Task 2) - Node.js + Express"]
-        API[Express App - /api] --> H[GET /api/health]
-        API --> AUTH[Auth Router - /api/auth]
-        API --> USR[User Router - /api/users]
-        API --> PRJ[Project Router - /api/projects]
-        API --> TSK[Task Router - /api/tasks]
-
-        AUTH --> MW_VAL[validate.js]
-        PRJ --> MW_AUTH[auth.middleware.js]
-        TSK --> MW_AUTH
-        
-        PRJ --> STORE[(In-Memory store.js)]
-        TSK --> STORE
-        USR --> STORE
-        AUTH --> STORE
-    end
-```
-
----
-
-## GitHub Repository Information
-
-- **Repository**: [`https://github.com/Priyan120-dev/TaskFlow-developer-productivity-dashboard`](https://github.com/Priyan120-dev/TaskFlow-developer-productivity-dashboard)
-- **Primary Branch**: `main`
-- **Evaluation Milestones**:
-  - `Task 1`: Frontend Developer Productivity Dashboard (React, Tailwind, Vite)
-  - `Task 2`: Backend & REST API Development (`taskflow-api` Express microservice)
-
----
-
-## Author & Credits
+## 20. Author
 
 - **Developer**: PRIYAN
 - **Role**: Full Stack Developer
-- **Email**: [priyaniyappan120@gmail.com](mailto:priyaniyapppan120@gmaiil..com)
+- **Email**: [priyaniyappan120@gmail.com](mailto:priyaniyappan120@gmail.com)
+- **Repository**: [Priyan120-dev/TaskFlow-developer-productivity-dashboard](https://github.com/Priyan120-dev/TaskFlow-developer-productivity-dashboard)
 - **Program**: Innovation Hacks Full Stack Development Internship
 
 ---
 
-## License
-
-This project is licensed under the [MIT License](LICENSE).
+## 📄 License
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
