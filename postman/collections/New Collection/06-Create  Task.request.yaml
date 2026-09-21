@@ -1,0 +1,26 @@
+$kind: http-request
+description: ""
+url: http://localhost:5000/api/tasks
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"title\": \"Implement OAuth2 SSO integration\",\r
+
+    \  \"description\": \"Configure Google and GitHub SSO providers.\",\r
+
+    \  \"projectId\": \"proj-1\",\r
+
+    \  \"status\": \"todo\",\r
+
+    \  \"priority\": \"high\",\r
+
+    \  \"dueDate\": \"2026-10-25\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: mock-jwt-token-
+order: 4422935427194367

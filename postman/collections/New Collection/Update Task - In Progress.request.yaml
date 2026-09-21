@@ -1,0 +1,12 @@
+$kind: http-request
+description: ""
+url: http://localhost:5000/api/tasks/task-5
+method: PUT
+body:
+  type: json
+  content: ""
+auth:
+  type: bearer
+  credentials:
+    token: mock-jwt-token-u
+order: 4437579601719744

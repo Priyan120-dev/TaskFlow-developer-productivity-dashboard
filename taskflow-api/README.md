@@ -1,211 +1,110 @@
-# TaskFlow API — Backend REST API
+# TaskFlow REST API Service
 
-Backend REST API for the TaskFlow Developer Productivity Dashboard.
-Built for the Innovation Hacks Full Stack Development Internship.
+The backend REST API service for **TaskFlow — Developer Productivity Workspace**. Built with Node.js, Express, MongoDB Atlas, and Google Gemini Generative AI.
 
-## API Documentation
-Full API documentation available in: docs/api.md
+For the overarching application architecture and frontend documentation, see the [Root README](../README.md).
 
-## Tech Stack
-- Node.js & Express.js
-- MongoDB & Mongoose ODM
-- Bcryptjs (Secure password hashing)
-- JSON Web Token (JWT authentication)
-- UUID
-- CORS
-- Dotenv
+---
 
-## Setup Instructions
+## 🛠️ Technology Stack
+
+- **Runtime**: Node.js (v18+)
+- **Framework**: Express.js (v4.19)
+- **Database**: MongoDB Atlas via Mongoose ODM (v8+)
+- **Authentication**: JSON Web Tokens (`jsonwebtoken`) & password hashing (`bcryptjs`)
+- **AI Intelligence**: Google Gemini API via REST integration (`gemini-3.5-flash-lite`)
+- **Security & Utilities**: CORS, Dotenv, UUID
+
+---
+
+## 🚀 Getting Started
 
 ### 1. Installation
 ```bash
 cd taskflow-api
 npm install
-cp .env.example .env
 ```
 
 ### 2. Environment Configuration
-Configure `.env` with your settings:
+Create a `.env` file from the provided template:
+```bash
+cp .env.example .env
+```
+
+Configure your local `.env` variables:
 ```env
 PORT=5000
 NODE_ENV=development
 CORS_ORIGIN=http://localhost:5173
-JWT_SECRET=your_jwt_secret_key_here_min_32_characters
-MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/taskflow?retryWrites=true&w=majority
+JWT_SECRET=your_jwt_secret_key_minimum_32_characters
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/taskflow?retryWrites=true&w=majority
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-3.5-flash-lite
 ```
 
+> [!IMPORTANT]
+> Keep `GEMINI_API_KEY`, `MONGODB_URI`, and `JWT_SECRET` confidential. The `.env` file is gitignored and must never be committed.
+
 ### 3. Database Seeding
-Seed baseline data (1 User, 3 Projects, 5 Tasks):
+Seed the database with the default developer account (`alex@taskflow.dev`), 3 starter projects, and 5 milestone tasks:
 ```bash
 npm run seed
 ```
 
-### 4. Start Development Server
+### 4. Running the Server
+
 ```bash
+# Development mode (auto-reload via nodemon)
 npm run dev
+
+# Production mode
+npm start
 ```
+
+Default API Base URL: `http://localhost:5000/api`
 
 ---
 
-## MongoDB Atlas Setup Guide
+## 📡 API Endpoints Overview
 
-1. **Create Account & Cluster**:
-   - Register at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
-   - Create a free shared cluster (M0 sandbox).
-2. **Configure Database User**:
-   - Navigate to **Security** -> **Database Access**.
-   - Add a new database user with password authentication (ensure credentials are saved).
-   - Assign built-in role: `Read and write to any database`.
-3. **Configure Network Access**:
-   - Navigate to **Security** -> **Network Access**.
-   - Click **Add IP Address** -> select **Allow Access from Anywhere** (`0.0.0.0/0`) for development.
-4. **Obtain Connection String**:
-   - In **Deployment** -> **Database**, click **Connect** -> **Drivers** (Node.js).
-   - Copy the SRV URI and paste it into `MONGODB_URI` in `.env`.
-   - Replace `<password>` with your database user password. If password contains special characters, URL-encode them.
+| Category | Method | Endpoint | Description | Auth Required |
+|---|---|---|---|:---:|
+| **Health** | `GET` | `/api/health` | Service health, timestamp, and database status | No |
+| **Auth** | `POST` | `/api/auth/register` | Register a new user | No |
+| **Auth** | `POST` | `/api/auth/login` | Authenticate user and receive JWT | No |
+| **Auth** | `GET` | `/api/auth/me` | Fetch authenticated user profile | Yes |
+| **Users** | `GET` | `/api/users` | List active team members | Yes |
+| **Projects** | `GET` | `/api/projects` | List projects with dynamic task counters | Yes |
+| **Projects** | `POST` | `/api/projects` | Create a new project (scoped to `req.user.id`) | Yes |
+| **Projects** | `GET` | `/api/projects/:id` | Get project details | Yes |
+| **Projects** | `PUT` | `/api/projects/:id` | Update project (enforces ownership) | Yes |
+| **Projects** | `DELETE`| `/api/projects/:id` | Delete project and associated tasks | Yes |
+| **Tasks** | `GET` | `/api/tasks` | Query tasks (supports `status`, `priority`, `search`) | Yes |
+| **Tasks** | `POST` | `/api/tasks` | Create task linked to a project | Yes |
+| **Tasks** | `GET` | `/api/tasks/:id` | Get task details | Yes |
+| **Tasks** | `PUT` | `/api/tasks/:id` | Update task status, priority, or details | Yes |
+| **Tasks** | `DELETE`| `/api/tasks/:id` | Delete task item | Yes |
+| **Stats** | `GET` | `/api/stats` | Aggregated metrics for dashboard KPIs | Yes |
+| **AI** | `POST` | `/api/ai/plan` | Decompose natural language goal into milestone tasks | Yes |
+| **AI** | `GET` | `/api/ai/daily-focus` | Synthesize daily executive focus briefing | Yes |
+| **AI** | `POST` | `/api/ai/copilot` | AI Copilot technical Q&A and action proposals | Yes |
 
----
-
-## Database Schemas & Relationships
-
-### Collections
-- **`users`**: User identity, authentication, and team roles (`developer`, `manager`, `admin`).
-- **`projects`**: Initiatives with status (`active`, `completed`, `on-hold`), owner reference, and deadlines.
-- **`tasks`**: Work items with status (`todo`, `in-progress`, `done`), priority (`low`, `medium`, `high`), project reference, and assignee/creator references.
-
-### Relationships
-- **User -> Projects**: One-to-Many (`Project.owner` references `User._id`).
-- **Project -> Tasks**: One-to-Many (`Task.project` references `Project._id`).
-- **User -> Assigned Tasks**: One-to-Many (`Task.assignee` references `User._id`).
-- **User -> Created Tasks**: One-to-Many (`Task.createdBy` references `User._id`).
+Detailed endpoint specifications, request payloads, and response examples are documented in:
+👉 **[docs/api.md](docs/api.md)**
 
 ---
 
-## Seed Data & Default Credentials
+## 🗄️ Database Architecture
 
-After running `npm run seed`:
-- **Default User**:
-  - **Email**: `alex@taskflow.dev`
-  - **Password**: `password123`
-  - **Role**: `developer`
-- **Seeded Projects**:
-  1. API Gateway Migration (`active`)
-  2. Mobile App Redesign (`active`)
-  3. Cloud Infrastructure Setup (`completed`)
-- **Seeded Tasks**: 5 tasks linked across the 3 projects with diverse statuses and priorities.
+- **`User`**: Handles user authentication, hashed password storage, and team roles (`developer`, `manager`, `admin`).
+- **`Project`**: Workspaces containing title, description, status (`active`, `completed`, `on-hold`), owner reference, and deadlines.
+- **`Task`**: Deliverables with title, description, status (`todo`, `in-progress`, `done`), priority (`low`, `medium`, `high`), estimated hours, and project/assignee references.
 
 ---
 
-## Persistence Verification
+## 🔒 Security Summary
 
-To verify that data persists:
-1. Start the server: `npm run dev`.
-2. Create a project via `POST /api/projects` or register a new user.
-3. Stop the server (`Ctrl+C`).
-4. Restart with `npm run dev`.
-5. Call `GET /api/projects` or `GET /api/users` and observe all data remains intact in MongoDB.
-
----
-
-## Endpoints
-
-| Method | Endpoint | Query Params | Auth Required |
-|--------|----------|--------------|---------------|
-| GET | /api/health | - | No |
-| POST | /api/auth/register | - | No |
-| POST | /api/auth/login | - | No |
-| GET | /api/users | - | Yes |
-| GET | /api/users/:id | - | Yes |
-| GET | /api/projects | ?search ?status | No |
-| POST | /api/projects | - | Yes |
-| GET | /api/projects/:id | - | No |
-| PUT | /api/projects/:id | - | Yes |
-| DELETE | /api/projects/:id | - | Yes |
-| GET | /api/tasks | ?projectId ?status ?priority ?search | No |
-| POST | /api/tasks | - | Yes |
-| GET | /api/tasks/:id | - | No |
-| PUT | /api/tasks/:id | - | Yes |
-| DELETE | /api/tasks/:id | - | Yes |
-
----
-
-## Example Requests
-
-### Health Check
-```bash
-curl http://localhost:5000/api/health
-```
-
-### Register User
-```bash
-curl -X POST http://localhost:5000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Alex Kumar","email":"alex@test.com","password":"123456"}'
-```
-
-### Login
-```bash
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"alex@taskflow.dev","password":"password123"}'
-```
-
-### Get All Projects
-```bash
-curl http://localhost:5000/api/projects
-```
-
-### Search Projects
-```bash
-curl "http://localhost:5000/api/projects?search=mobile"
-```
-
-### Filter Projects by Status
-```bash
-curl "http://localhost:5000/api/projects?status=active"
-```
-
-### Create Project
-```bash
-curl -X POST http://localhost:5000/api/projects \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <jwt-token>" \
-  -d '{"name":"New Project","description":"Project description here"}'
-```
-
-### Get All Tasks
-```bash
-curl http://localhost:5000/api/tasks
-```
-
-### Create Task
-```bash
-curl -X POST http://localhost:5000/api/tasks \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <jwt-token>" \
-  -d '{"title":"New Task","projectId":"<project-id>","priority":"high"}'
-```
-
-### Filter Tasks
-```bash
-curl "http://localhost:5000/api/tasks?status=todo&priority=high"
-```
-
-### Search Tasks
-```bash
-curl "http://localhost:5000/api/tasks?search=rate"
-```
-
-### Update Task Status
-```bash
-curl -X PUT http://localhost:5000/api/tasks/<task-id> \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <jwt-token>" \
-  -d '{"status":"done"}'
-```
-
-### Delete Task
-```bash
-curl -X DELETE http://localhost:5000/api/tasks/<task-id> \
-  -H "Authorization: Bearer <jwt-token>"
-```
+- **Bcrypt Password Hashing**: Passwords are encrypted with 10 salt rounds before saving.
+- **JWT Protection**: Stateless Bearer token verification on all protected mutation and query endpoints.
+- **Ownership Verification**: Backend controllers never trust client-supplied owner IDs; all writes are bound to `req.user.id`.
+- **LLM Safety**: AI capabilities are purely advisory; database modifications require explicit client confirmation via standard CRUD endpoints.

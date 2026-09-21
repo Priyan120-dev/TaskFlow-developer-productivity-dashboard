@@ -131,18 +131,28 @@ const updateProject = async (req, res, next) => {
     if (dueDate !== undefined) updates.dueDate = dueDate;
     if (color !== undefined) updates.color = color;
 
-    const project = await Project.findByIdAndUpdate(id, updates, {
-      new: true,
-      returnDocument: 'after',
-      runValidators: true,
-    });
-
-    if (!project) {
+    const existingProject = await Project.findById(id);
+    if (!existingProject) {
       return res.status(404).json({
         success: false,
         message: 'Project not found',
       });
     }
+
+    const isOwner = existingProject.owner && existingProject.owner.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update this project',
+      });
+    }
+
+    const project = await Project.findByIdAndUpdate(id, updates, {
+      new: true,
+      returnDocument: 'after',
+      runValidators: true,
+    });
 
     return res.status(200).json({
       success: true,
@@ -171,6 +181,15 @@ const deleteProject = async (req, res, next) => {
       return res.status(404).json({
         success: false,
         message: 'Project not found',
+      });
+    }
+
+    const isOwner = project.owner && project.owner.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to delete this project',
       });
     }
 

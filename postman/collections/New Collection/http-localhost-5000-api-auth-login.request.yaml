@@ -1,0 +1,13 @@
+$kind: http-request
+name: http://localhost:5000/api/auth/login
+description: ""
+url: http://localhost:5000/api/auth/login
+method: POST
+body:
+  type: json
+  content: |-
+    {
+      "email": "priya@taskflow.dev",
+      "password": "password123"
+    }
+order: 4262956667765065

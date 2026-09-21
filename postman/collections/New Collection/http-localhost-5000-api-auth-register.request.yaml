@@ -1,0 +1,14 @@
+$kind: http-request
+name: http://localhost:5000/api/auth/register
+description: ""
+url: http://localhost:5000/api/auth/register
+method: POST
+body:
+  type: json
+  content: |-
+    {
+      "name": "Priya Sharma",
+      "email": "priya@taskflow.dev",
+      "password": "password123"
+    }
+order: 3693995282672370

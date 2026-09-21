@@ -1,0 +1,6 @@
+$kind: http-request
+name: http://localhost:5000/api/health
+description: ""
+url: http://localhost:5000/api/health
+method: GET
+order: 1789904967797

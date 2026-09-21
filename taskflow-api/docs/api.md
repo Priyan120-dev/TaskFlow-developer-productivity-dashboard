@@ -1,14 +1,89 @@
 # TaskFlow API Documentation
 
+Comprehensive REST API reference for the **TaskFlow** backend service, covering authentication, resource management, platform analytics, and Google Gemini AI capabilities.
+
 ## Base URL
+```text
 http://localhost:5000/api
+```
 
-## New Endpoints Added
+---
 
-### Stats Overview
-GET /api/stats
+## 🔒 Authentication & Headers
 
-Response 200:
+All protected endpoints require a signed JSON Web Token (JWT) provided via standard HTTP Bearer authorization:
+
+```http
+Authorization: Bearer <your_jwt_token>
+Content-Type: application/json
+```
+
+Tokens are obtained by authenticating through `POST /api/auth/login` or `POST /api/auth/register`. Tokens expire in 7 days.
+
+---
+
+## 📦 Standard Response Envelopes
+
+### Success Response (`200 OK`, `201 Created`)
+```json
+{
+  "success": true,
+  "message": "Resource retrieved or mutated successfully",
+  "data": {
+    "resource": { ... }
+  }
+}
+```
+
+### Error Response (`400`, `401`, `403`, `404`, `500`)
+```json
+{
+  "success": false,
+  "message": "Human-readable explanation of error",
+  "errors": ["Optional array of specific field validation errors"]
+}
+```
+
+---
+
+## 🚦 HTTP Status Codes
+
+| Code | Status | Meaning |
+|---|---|---|
+| `200` | OK | Request succeeded. |
+| `201` | Created | Resource successfully created. |
+| `400` | Bad Request | Validation failure or malformed payload. |
+| `401` | Unauthorized | Missing, invalid, or expired JWT. |
+| `403` | Forbidden | Requesting user does not own the target resource. |
+| `404` | Not Found | Requested entity does not exist. |
+| `409` | Conflict | Duplicate entry (e.g., email already registered). |
+| `503` | Service Unavailable | External AI service temporarily unavailable. |
+| `500` | Internal Server Error | Unhandled server exception. |
+
+---
+
+## 📋 Endpoints Matrix
+
+### 1. System Health & Platform Analytics
+
+#### Health Check
+`GET /api/health` — Public
+- **Response 200**:
+```json
+{
+  "success": true,
+  "status": "ok",
+  "message": "TaskFlow API is running",
+  "timestamp": "2026-09-22T01:30:00.000Z",
+  "environment": "development",
+  "database": "MongoDB Atlas",
+  "version": "1.0.0"
+}
+```
+
+#### Stats Overview
+`GET /api/stats` — Protected
+- **Response 200**:
 ```json
 {
   "success": true,
@@ -17,7 +92,8 @@ Response 200:
     "projects": {
       "total": 3,
       "active": 2,
-      "completed": 1
+      "completed": 1,
+      "onHold": 0
     },
     "tasks": {
       "total": 5,
@@ -30,152 +106,57 @@ Response 200:
 }
 ```
 
-### Enhanced Health Check
-GET /api/health
-
-Response 200:
-```json
-{
-  "success": true,
-  "status": "ok",
-  "message": "TaskFlow API is running",
-  "timestamp": "2026-09-20T10:00:00.000Z",
-  "environment": "development",
-  "database": "MongoDB Atlas",
-  "version": "1.0.0",
-  "endpoints": {
-    "auth": "/api/auth",
-    "users": "/api/users",
-    "projects": "/api/projects",
-    "tasks": "/api/tasks"
-  }
-}
-```
-
-## Authentication
-All protected routes require:
-Authorization: Bearer <token>
-
-## Response Format
-
-### Success Response
-```json
-{
-  "success": true,
-  "message": "Description of action",
-  "data": { ... }
-}
-```
-
-### Error Response
-```json
-{
-  "success": false,
-  "message": "Error description",
-  "errors": ["field error 1", "field error 2"]
-}
-```
-
-## HTTP Status Codes
-| Code | Meaning |
-|------|---------|
-| 200  | Success |
-| 201  | Created |
-| 400  | Validation Error |
-| 401  | Unauthorized |
-| 404  | Not Found |
-| 409  | Conflict (duplicate) |
-| 500  | Server Error |
-
 ---
 
-## Endpoints
-
-### Health Check
-GET /api/health
-
-Response 200:
-```json
-{
-  "success": true,
-  "status": "ok",
-  "message": "TaskFlow API is running",
-  "timestamp": "2026-09-20T10:00:00.000Z"
-}
-```
-
----
-
-### AUTH
+### 2. Authentication (`/api/auth`)
 
 #### Register User
-POST /api/auth/register
-Content-Type: application/json
-
-Request Body:
+`POST /api/auth/register` — Public
+- **Request Body**:
 ```json
 {
-  "name": "Alex Kumar",
-  "email": "alex@taskflow.dev",
-  "password": "123456"
+  "name": "Jane Developer",
+  "email": "jane@taskflow.dev",
+  "password": "password123",
+  "role": "developer"
 }
 ```
-
-Success Response 201:
+- **Response 201**:
 ```json
 {
   "success": true,
   "message": "User registered successfully",
   "data": {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "user": {
-      "id": "user-1",
-      "name": "Alex Kumar",
-      "email": "alex@taskflow.dev",
+      "id": "66e01a2b3c4d5e6f7a8b9c0d",
+      "name": "Jane Developer",
+      "email": "jane@taskflow.dev",
       "role": "developer",
-      "createdAt": "2026-09-20T10:00:00.000Z"
+      "createdAt": "2026-09-22T01:00:00.000Z"
     }
   }
 }
 ```
 
-Error 400 (validation):
-```json
-{
-  "success": false,
-  "message": "Validation failed",
-  "errors": ["Password must be at least 6 characters"]
-}
-```
-
-Error 409 (duplicate email):
-```json
-{
-  "success": false,
-  "message": "Email already registered"
-}
-```
-
-#### Login
-POST /api/auth/login
-Content-Type: application/json
-
-Request Body:
+#### Login User
+`POST /api/auth/login` — Public
+- **Request Body**:
 ```json
 {
   "email": "alex@taskflow.dev",
   "password": "password123"
 }
 ```
-
-Success Response 200:
+- **Response 200**:
 ```json
 {
   "success": true,
   "message": "Login successful",
   "data": {
-    "token": "mock-jwt-token-user-1",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "user": {
-      "id": "user-1",
+      "id": "66e01a2b3c4d5e6f7a8b9c01",
       "name": "Alex Kumar",
       "email": "alex@taskflow.dev",
       "role": "developer"
@@ -184,221 +165,125 @@ Success Response 200:
 }
 ```
 
-Error 401:
-```json
-{
-  "success": false,
-  "message": "Invalid email or password"
-}
-```
+#### Get Current User Profile
+`GET /api/auth/me` — Protected
+- **Response 200**: Returns authenticated user document excluding the password hash.
 
 ---
 
-### USERS
+### 3. Users (`/api/users`)
 
-#### Get All Users
-GET /api/users
-Authorization: Bearer mock-jwt-token-user-1
-
-Response 200:
+#### List Users
+`GET /api/users` — Protected
+- **Response 200**:
 ```json
 {
   "success": true,
   "data": {
-    "users": [...],
+    "users": [
+      {
+        "_id": "66e01a2b3c4d5e6f7a8b9c01",
+        "name": "Alex Kumar",
+        "email": "alex@taskflow.dev",
+        "role": "developer"
+      }
+    ],
     "total": 1
   }
 }
 ```
 
-#### Get User By ID
-GET /api/users/:id
-Authorization: Bearer mock-jwt-token-user-1
-
-Response 200:
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": "user-1",
-      "name": "Alex Kumar",
-      "email": "alex@taskflow.dev",
-      "role": "developer",
-      "createdAt": "..."
-    }
-  }
-}
-```
-
-Error 404:
-```json
-{
-  "success": false,
-  "message": "User not found"
-}
-```
+#### Get User by ID
+`GET /api/users/:id` — Protected
 
 ---
 
-### PROJECTS
+### 4. Projects (`/api/projects`)
 
-#### Get All Projects
-GET /api/projects
-Optional query params:
-  ?search=mobile
-  ?status=active
-
-Response 200:
-```json
-{
-  "success": true,
-  "data": {
-    "projects": [
-      {
-        "id": "proj-1",
-        "name": "API Gateway Migration",
-        "description": "...",
-        "status": "active",
-        "color": "#3b82f6",
-        "dueDate": "2026-10-15",
-        "ownerId": "user-1",
-        "taskCount": 3,
-        "completedTasks": 1,
-        "createdAt": "..."
-      }
-    ],
-    "total": 2
-  }
-}
-```
+#### List Projects
+`GET /api/projects` — Protected
+- **Query Parameters**:
+  - `status`: Filter by `active`, `completed`, or `on-hold`.
+  - `search`: Filter by string match against project name or description.
+- **Response 200**: Returns array of projects owned by or accessible to `req.user.id`, dynamically populated with `taskCount` and `completedTasks`.
 
 #### Create Project
-POST /api/projects
-Authorization: Bearer mock-jwt-token-user-1
-Content-Type: application/json
-
-Request Body:
+`POST /api/projects` — Protected
+- **Request Body**:
 ```json
 {
-  "name": "New Project",
-  "description": "Project description here",
+  "name": "Cloud Infrastructure & Redis",
+  "description": "Migration of microservices to AWS and Redis caching",
   "status": "active",
-  "dueDate": "2026-12-31",
-  "color": "#3b82f6"
+  "color": "#3b82f6",
+  "deadline": "2026-11-15T00:00:00.000Z"
 }
 ```
-
-Response 201:
+- **Response 201**:
 ```json
 {
   "success": true,
   "message": "Project created successfully",
   "data": {
-    "project": { ...all fields }
-  }
-}
-```
-
-Error 400:
-```json
-{
-  "success": false,
-  "message": "Validation failed",
-  "errors": ["Name must be at least 2 characters"]
-}
-```
-
-#### Get Project By ID
-GET /api/projects/:id
-
-Response 200:
-```json
-{
-  "success": true,
-  "data": {
     "project": {
-      ...all fields,
-      "taskCount": 3,
-      "completedTasks": 1
+      "_id": "66e01a2b3c4d5e6f7a8b9c10",
+      "name": "Cloud Infrastructure & Redis",
+      "description": "Migration of microservices to AWS and Redis caching",
+      "status": "active",
+      "color": "#3b82f6",
+      "owner": "66e01a2b3c4d5e6f7a8b9c01",
+      "deadline": "2026-11-15T00:00:00.000Z",
+      "createdAt": "2026-09-22T01:30:00.000Z"
     }
   }
 }
 ```
 
+#### Get Project by ID
+`GET /api/projects/:id` — Protected
+
 #### Update Project
-PUT /api/projects/:id
-Authorization: Bearer mock-jwt-token-user-1
-Content-Type: application/json
-
-Request Body (all optional):
-```json
-{
-  "name": "Updated Name",
-  "description": "Updated description",
-  "status": "completed",
-  "dueDate": "2026-11-30",
-  "color": "#10b981"
-}
-```
-
-Response 200:
-```json
-{
-  "success": true,
-  "message": "Project updated successfully",
-  "data": {
-    "project": { ...updated fields }
-  }
-}
-```
+`PUT /api/projects/:id` — Protected (Verifies owner authorization)
+- **Request Body**: Any valid subset of project fields (`name`, `description`, `status`, `color`, `deadline`).
 
 #### Delete Project
-DELETE /api/projects/:id
-Authorization: Bearer mock-jwt-token-user-1
+`DELETE /api/projects/:id` — Protected (Cascading delete of associated tasks)
 
-Response 200:
-```json
-{
-  "success": true,
-  "message": "Project and its tasks deleted successfully"
-}
-```
-
-Note: Deleting a project also deletes all tasks 
-belonging to that project.
+#### Get Tasks by Project
+`GET /api/projects/:id/tasks` — Protected
+- Returns all tasks belonging to the specified project.
 
 ---
 
-### TASKS
+### 5. Tasks (`/api/tasks`)
 
-#### Get All Tasks
-GET /api/tasks
-Optional query params:
-  ?projectId=proj-1
-  ?status=todo
-  ?priority=high
-  ?search=rate limiting
-
-All filters work together simultaneously.
-
-Response 200:
+#### List Tasks
+`GET /api/tasks` — Protected
+- **Query Parameters**:
+  - `status`: `todo`, `in-progress`, `done`
+  - `priority`: `low`, `medium`, `high`
+  - `projectId`: MongoDB ObjectId of parent project
+  - `search`: Case-insensitive title/description search
+- **Response 200**:
 ```json
 {
   "success": true,
   "data": {
     "tasks": [
       {
-        "id": "task-1",
-        "title": "Set up API rate limiting",
-        "description": "...",
-        "status": "done",
+        "_id": "66e01a2b3c4d5e6f7a8b9c20",
+        "title": "Setup Redis Cache Cluster",
+        "description": "Configure ElastiCache Redis cluster with VPC peering",
+        "status": "in-progress",
         "priority": "high",
-        "dueDate": "2026-09-20",
-        "projectId": "proj-1",
-        "assigneeId": "user-1",
-        "createdAt": "...",
-        "updatedAt": "..."
+        "estimatedHours": 8,
+        "dueDate": "2026-10-05T00:00:00.000Z",
+        "project": {
+          "_id": "66e01a2b3c4d5e6f7a8b9c10",
+          "name": "Cloud Infrastructure & Redis"
+        },
+        "assignee": "66e01a2b3c4d5e6f7a8b9c01",
+        "createdBy": "66e01a2b3c4d5e6f7a8b9c01"
       }
     ],
     "total": 1
@@ -407,170 +292,152 @@ Response 200:
 ```
 
 #### Create Task
-POST /api/tasks
-Authorization: Bearer mock-jwt-token-user-1
-Content-Type: application/json
-
-Request Body:
+`POST /api/tasks` — Protected
+- **Request Body**:
 ```json
 {
-  "title": "New Task Title",
-  "description": "Task description",
-  "projectId": "proj-1",
+  "title": "Setup Redis Cache Cluster",
+  "description": "Configure ElastiCache Redis cluster with VPC peering",
   "status": "todo",
-  "priority": "medium",
-  "dueDate": "2026-11-01",
-  "assigneeId": "user-1"
+  "priority": "high",
+  "estimatedHours": 8,
+  "dueDate": "2026-10-05T00:00:00.000Z",
+  "projectId": "66e01a2b3c4d5e6f7a8b9c10"
 }
 ```
-
-Response 201:
-```json
-{
-  "success": true,
-  "message": "Task created successfully",
-  "data": {
-    "task": { ...all fields }
-  }
-}
-```
-
-Error 404 (invalid projectId):
-```json
-{
-  "success": false,
-  "message": "Project not found"
-}
-```
-
-#### Get Task By ID
-GET /api/tasks/:id
-
-Response 200:
-```json
-{
-  "success": true,
-  "data": {
-    "task": { ...all fields }
-  }
-}
-```
+- **Response 201**: Returns created task document.
 
 #### Update Task
-PUT /api/tasks/:id
-Content-Type: application/json
+`PUT /api/tasks/:id` — Protected
+- **Request Body**: Subset of fields to update (`status`, `priority`, `title`, `description`, `dueDate`).
 
-Request Body (all optional):
+#### Delete Task
+`DELETE /api/tasks/:id` — Protected
+
+---
+
+### 6. AI Capabilities (`/api/ai`)
+
+#### AI Goal → Complete Task Plan
+`POST /api/ai/plan` — Protected
+Decomposes a high-level goal into a complete milestone roadmap.
+- **Request Body**:
 ```json
 {
-  "title": "Updated title",
-  "description": "Updated description",
-  "status": "in-progress",
-  "priority": "high",
-  "dueDate": "2026-10-15",
-  "assigneeId": "user-1"
+  "goal": "Build an AI resume analyzer with authentication, resume upload, Gemini integration and deployment in 2 weeks"
 }
 ```
-
-Response 200:
+- **Response 200**:
 ```json
 {
   "success": true,
-  "message": "Task updated successfully",
   "data": {
-    "task": { ...updated fields with new updatedAt }
+    "projectTitle": "AI Resume Parser & Analyzer",
+    "projectDescription": "Automated resume parsing engine using Google Gemini with secure authentication and multi-format document support.",
+    "suggestedColor": "#3b82f6",
+    "tasks": [
+      {
+        "title": "Initialize project repository & auth boilerplate",
+        "description": "Scaffold Express and React with JWT authentication",
+        "priority": "high",
+        "estimatedHours": 6,
+        "reasoning": "Foundational architecture required for user data isolation."
+      },
+      {
+        "title": "Build file upload endpoint with PDF parsing",
+        "description": "Implement multer upload and pdf-parse extraction",
+        "priority": "high",
+        "estimatedHours": 8,
+        "reasoning": "Core ingestion pipeline for resume documents."
+      }
+    ]
   }
 }
 ```
 
-#### Delete Task
-DELETE /api/tasks/:id
-
-Response 200:
+#### AI Daily Focus Engine
+`GET /api/ai/daily-focus` — Protected
+Analyzes authenticated user's pending MongoDB tasks and synthesizes an executive briefing.
+- **Response 200**:
 ```json
 {
   "success": true,
-  "message": "Task deleted successfully"
+  "data": {
+    "summary": "You have 3 active tasks today with an approaching design milestone.",
+    "focusTasks": [
+      {
+        "taskId": "66e01a2b3c4d5e6f7a8b9c20",
+        "title": "Design new onboarding flow screens",
+        "priority": "high",
+        "reason": "This task carries a high priority with the earliest upcoming deadline.",
+        "suggestedAction": "Finalize remaining wireframes for registration and onboarding."
+      }
+    ],
+    "warnings": []
+  }
+}
+```
+
+#### TaskFlow AI Copilot
+`POST /api/ai/copilot` — Protected
+Handles developer technical questions, contextual workspace queries, and action proposals.
+- **Request Body**:
+```json
+{
+  "message": "Create a project called Cloud Infrastructure",
+  "history": [
+    { "role": "user", "content": "Hello Copilot!" },
+    { "role": "assistant", "content": "Hello! How can I assist your workflow today?" }
+  ]
+}
+```
+- **Response 200 (Action Proposal)**:
+```json
+{
+  "success": true,
+  "data": {
+    "reply": "I have formulated a project proposal for Cloud Infrastructure. Please review and confirm below.",
+    "intent": "create_project",
+    "action": {
+      "actionType": "create_project",
+      "requiresConfirmation": true,
+      "payload": {
+        "name": "Cloud Infrastructure",
+        "description": "Cloud migration and infrastructure setup",
+        "status": "active",
+        "color": "#3b82f6"
+      }
+    }
+  }
 }
 ```
 
 ---
 
-## Curl Examples
+## 💻 cURL Testing Commands
 
-### Health Check
 ```bash
+# 1. Health check
 curl http://localhost:5000/api/health
-```
 
-### Register
-```bash
-curl -X POST http://localhost:5000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Test User","email":"test@test.com","password":"123456"}'
-```
-
-### Login
-```bash
+# 2. Login
 curl -X POST http://localhost:5000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"alex@taskflow.dev","password":"password123"}'
-```
 
-### Get All Projects
-```bash
-curl http://localhost:5000/api/projects
-```
+# 3. List projects (replace TOKEN)
+curl http://localhost:5000/api/projects \
+  -H "Authorization: Bearer <TOKEN>"
 
-### Get Projects With Filter
-```bash
-curl "http://localhost:5000/api/projects?status=active"
-```
-
-### Search Projects
-```bash
-curl "http://localhost:5000/api/projects?search=mobile"
-```
-
-### Create Project
-```bash
-curl -X POST http://localhost:5000/api/projects \
+# 4. Generate AI Task Plan
+curl -X POST http://localhost:5000/api/ai/plan \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer mock-jwt-token-user-1" \
-  -d '{"name":"New Project","description":"Description here"}'
-```
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"goal":"Build a real-time notification service with WebSockets"}'
 
-### Get All Tasks
-```bash
-curl http://localhost:5000/api/tasks
-```
-
-### Filter Tasks
-```bash
-curl "http://localhost:5000/api/tasks?status=todo&priority=high"
-```
-
-### Search Tasks
-```bash
-curl "http://localhost:5000/api/tasks?search=rate"
-```
-
-### Create Task
-```bash
-curl -X POST http://localhost:5000/api/tasks \
+# 5. Query AI Copilot
+curl -X POST http://localhost:5000/api/ai/copilot \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer mock-jwt-token-user-1" \
-  -d '{"title":"New Task","projectId":"proj-1","priority":"high"}'
-```
-
-### Update Task Status
-```bash
-curl -X PUT http://localhost:5000/api/tasks/task-1 \
-  -H "Content-Type: application/json" \
-  -d '{"status":"done"}'
-```
-
-### Delete Task
-```bash
-curl -X DELETE http://localhost:5000/api/tasks/task-1
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"message":"What should I focus on today?"}'
 ```

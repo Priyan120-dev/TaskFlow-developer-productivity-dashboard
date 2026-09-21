@@ -1,0 +1,25 @@
+$kind: http-request
+name: http://localhost:5000/api/projects
+description: ""
+url: http://localhost:5000/api/projects
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"name\": \"Client Portal Integration\",\r
+
+    \  \"description\": \"Unified dashboard client portal for enterprise teams.\",\r
+
+    \  \"status\": \"active\",\r
+
+    \  \"dueDate\": \"2026-12-15\",\r
+
+    \  \"color\": \"#3b82f6\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: mock-jwt-token-user-2
+order: 4408309698287278

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
-import { currentUser } from '../data/mockData';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboardIcon,
   FolderKanbanIcon,
@@ -11,12 +11,23 @@ import {
 
 export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const navLinks = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboardIcon },
     { name: 'Projects', path: '/projects', icon: FolderKanbanIcon },
     { name: 'Tasks', path: '/tasks', icon: CheckSquareIcon },
   ];
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const displayName = user?.name || 'User';
+  const displayRole = user?.role || 'Member';
+  const initial = displayName.charAt(0).toUpperCase();
 
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-slate-200">
@@ -44,7 +55,7 @@ export const Navbar = () => {
             </NavLink>
           </div>
 
-          {/* Desktop/Tablet Nav Links in Header (for screens where sidebar isn't visible, or quick access) */}
+          {/* Desktop/Tablet Nav Links in Header */}
           <nav className="hidden md:flex xl:hidden items-center gap-1">
             {navLinks.map((link) => {
               const Icon = link.icon;
@@ -67,23 +78,32 @@ export const Navbar = () => {
             })}
           </nav>
 
-          {/* User Profile Avatar */}
+          {/* User Profile Avatar & Logout */}
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex flex-col text-right">
               <span className="text-sm font-semibold text-slate-900 leading-tight">
-                {currentUser.name}
+                {displayName}
               </span>
-              <span className="text-xs text-slate-500">
-                {currentUser.role}
+              <span className="text-xs text-slate-500 capitalize">
+                {displayRole}
               </span>
             </div>
 
             <div
               className="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center font-semibold text-sm border-2 border-slate-100 shadow-sm"
-              title={`${currentUser.name} (${currentUser.role})`}
+              title={`${displayName} (${displayRole})`}
             >
-              {currentUser.avatar}
+              {initial}
             </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-colors ml-1"
+              title="Sign out of TaskFlow"
+            >
+              Sign out
+            </button>
           </div>
         </div>
       </div>
@@ -111,14 +131,23 @@ export const Navbar = () => {
               </NavLink>
             );
           })}
-          <div className="pt-3 mt-2 border-t border-slate-100 flex items-center gap-3 px-3">
-            <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-semibold">
-              {currentUser.avatar}
+          <div className="pt-3 mt-2 border-t border-slate-100 flex items-center justify-between px-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-semibold">
+                {initial}
+              </div>
+              <div className="text-xs">
+                <p className="font-semibold text-slate-800">{displayName}</p>
+                <p className="text-slate-500">{user?.email}</p>
+              </div>
             </div>
-            <div className="text-xs">
-              <p className="font-semibold text-slate-800">{currentUser.name}</p>
-              <p className="text-slate-500">{currentUser.email}</p>
-            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-2.5 py-1 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+            >
+              Sign out
+            </button>
           </div>
         </div>
       )}

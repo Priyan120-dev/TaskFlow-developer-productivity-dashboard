@@ -95,6 +95,15 @@ const createTask = async (req, res, next) => {
       });
     }
 
+    const isProjectOwner = projectExists.owner && projectExists.owner.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+    if (!isProjectOwner && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to create tasks in this project',
+      });
+    }
+
     let assignee = req.user.id;
     if (assigneeId && mongoose.Types.ObjectId.isValid(assigneeId)) {
       assignee = assigneeId;
@@ -133,6 +142,26 @@ const updateTask = async (req, res, next) => {
       });
     }
 
+    const existingTask = await Task.findById(id).populate('project');
+    if (!existingTask) {
+      return res.status(404).json({
+        success: false,
+        message: 'Task not found',
+      });
+    }
+
+    const isCreator = existingTask.createdBy && existingTask.createdBy.toString() === req.user.id;
+    const isAssignee = existingTask.assignee && existingTask.assignee.toString() === req.user.id;
+    const isProjectOwner = existingTask.project && existingTask.project.owner && existingTask.project.owner.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isCreator && !isAssignee && !isProjectOwner && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to update this task',
+      });
+    }
+
     const { title, description, status, priority, dueDate, assigneeId } = req.body;
     const updates = {};
     if (title !== undefined) updates.title = title.trim();
@@ -149,13 +178,6 @@ const updateTask = async (req, res, next) => {
       returnDocument: 'after',
       runValidators: true,
     });
-
-    if (!task) {
-      return res.status(404).json({
-        success: false,
-        message: 'Task not found',
-      });
-    }
 
     return res.status(200).json({
       success: true,
@@ -179,13 +201,26 @@ const deleteTask = async (req, res, next) => {
       });
     }
 
-    const task = await Task.findByIdAndDelete(id);
+    const task = await Task.findById(id).populate('project');
     if (!task) {
       return res.status(404).json({
         success: false,
         message: 'Task not found',
       });
     }
+
+    const isCreator = task.createdBy && task.createdBy.toString() === req.user.id;
+    const isProjectOwner = task.project && task.project.owner && task.project.owner.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isCreator && !isProjectOwner && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to delete this task',
+      });
+    }
+
+    await Task.findByIdAndDelete(id);
 
     return res.status(200).json({
       success: true,
