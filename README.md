@@ -581,7 +581,7 @@ graph TD
 
 - **Developer**: PRIYAN
 - **Role**: Full Stack Developer
-- **Email**: [priyaniyappan120@gmail.com](mailto:priyan@taskflow.dev)
+- **Email**: [priyaniyappan120@gmail.com](mailto:priyaniyapppan120@gmaiil..com)
 - **Program**: Innovation Hacks Full Stack Development Internship
 
 ---
