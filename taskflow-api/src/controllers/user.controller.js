@@ -1,35 +1,48 @@
-const store = require('../data/store');
+const mongoose = require('mongoose');
+const User = require('../models/User.model');
 
-const getAllUsers = (req, res) => {
-  const users = store.users.map(({ passwordHash, _plainPassword, ...userData }) => userData);
-  return res.status(200).json({
-    success: true,
-    data: {
-      users,
-      total: users.length,
-    },
-  });
+const getAllUsers = async (req, res, next) => {
+  try {
+    const users = await User.find();
+    return res.status(200).json({
+      success: true,
+      data: {
+        users,
+        total: users.length,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-const getUserById = (req, res) => {
-  const { id } = req.params;
-  const user = store.users.find(u => u.id === id);
+const getUserById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid ID format',
+      });
+    }
 
-  if (!user) {
-    return res.status(404).json({
-      success: false,
-      message: 'User not found',
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        user,
+      },
     });
+  } catch (error) {
+    next(error);
   }
-
-  const { passwordHash, _plainPassword, ...userData } = user;
-
-  return res.status(200).json({
-    success: true,
-    data: {
-      user: userData,
-    },
-  });
 };
 
 module.exports = {

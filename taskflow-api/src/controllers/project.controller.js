@@ -1,147 +1,189 @@
-const store = require('../data/store');
+const mongoose = require('mongoose');
+const Project = require('../models/Project.model');
+const Task = require('../models/Task.model');
 
-const getAllProjects = (req, res) => {
-  const enrichedProjects = store.projects.map(project => {
-    const projectTasks = store.tasks.filter(
-      t => t.projectId === project.id
+const getAllProjects = async (req, res, next) => {
+  try {
+    const { search, status } = req.query;
+    const filter = {};
+
+    if (search && search.trim() !== '') {
+      filter.name = { $regex: search.trim(), $options: 'i' };
+    }
+
+    if (status && status.trim() !== '') {
+      filter.status = status.trim();
+    }
+
+    const projects = await Project.find(filter);
+
+    const enrichedProjects = await Promise.all(
+      projects.map(async (project) => {
+        const [taskCount, completedTasks] = await Promise.all([
+          Task.countDocuments({ project: project._id }),
+          Task.countDocuments({ project: project._id, status: 'done' }),
+        ]);
+
+        const projectObj = project.toJSON ? project.toJSON() : project.toObject();
+        return {
+          ...projectObj,
+          taskCount,
+          completedTasks,
+        };
+      })
     );
-    return {
-      ...project,
-      taskCount: projectTasks.length,
-      completedTasks: projectTasks.filter(
-        t => t.status === 'done'
-      ).length,
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        projects: enrichedProjects,
+        total: enrichedProjects.length,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getProjectById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid ID format',
+      });
+    }
+
+    const project = await Project.findById(id);
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found',
+      });
+    }
+
+    const [taskCount, completedTasks] = await Promise.all([
+      Task.countDocuments({ project: project._id }),
+      Task.countDocuments({ project: project._id, status: 'done' }),
+    ]);
+
+    const projectObj = project.toJSON ? project.toJSON() : project.toObject();
+    const enrichedProject = {
+      ...projectObj,
+      taskCount,
+      completedTasks,
     };
-  });
 
-  const { search, status } = req.query;
-  const filtered = enrichedProjects.filter(project => {
-    const matchesSearch = search
-      ? project.name.toLowerCase().includes(search.toLowerCase()) ||
-        (project.description && project.description.toLowerCase().includes(search.toLowerCase()))
-      : true;
-    const matchesStatus = status
-      ? project.status === status
-      : true;
-    return matchesSearch && matchesStatus;
-  });
-
-  return res.status(200).json({
-    success: true,
-    data: {
-      projects: filtered,
-      total: filtered.length,
-    },
-  });
-};
-
-const getProjectById = (req, res) => {
-  const { id } = req.params;
-  const project = store.projects.find(p => p.id === id);
-
-  if (!project) {
-    return res.status(404).json({
-      success: false,
-      message: 'Project not found',
+    return res.status(200).json({
+      success: true,
+      data: {
+        project: enrichedProject,
+      },
     });
+  } catch (error) {
+    next(error);
   }
-
-  const projectTasks = store.tasks.filter(
-    t => t.projectId === project.id
-  );
-
-  const enrichedProject = {
-    ...project,
-    taskCount: projectTasks.length,
-    completedTasks: projectTasks.filter(
-      t => t.status === 'done'
-    ).length,
-  };
-
-  return res.status(200).json({
-    success: true,
-    data: {
-      project: enrichedProject,
-    },
-  });
 };
 
-const createProject = (req, res) => {
-  const { name, description, status, dueDate, color } = req.body;
+const createProject = async (req, res, next) => {
+  try {
+    const { name, description, status, dueDate, color } = req.body;
 
-  const newProject = {
-    id: `proj-${store.projects.length + 1}`,
-    name: name.trim(),
-    description: description.trim(),
-    status: status || 'active',
-    dueDate: dueDate || null,
-    color: color || '#3b82f6',
-    ownerId: (req.user && req.user.id) || 'user-1',
-    createdAt: new Date().toISOString(),
-  };
-
-  store.projects.push(newProject);
-
-  return res.status(201).json({
-    success: true,
-    message: 'Project created successfully',
-    data: {
-      project: newProject,
-    },
-  });
-};
-
-const updateProject = (req, res) => {
-  const { id } = req.params;
-  const projectIndex = store.projects.findIndex(p => p.id === id);
-
-  if (projectIndex === -1) {
-    return res.status(404).json({
-      success: false,
-      message: 'Project not found',
+    const newProject = await Project.create({
+      name: name ? name.trim() : undefined,
+      description: description ? description.trim() : undefined,
+      status: status || 'active',
+      dueDate: dueDate || null,
+      color: color || '#3b82f6',
+      owner: req.user.id,
     });
+
+    const projectObj = newProject.toJSON ? newProject.toJSON() : newProject.toObject();
+
+    return res.status(201).json({
+      success: true,
+      message: 'Project created successfully',
+      data: {
+        project: projectObj,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
-
-  const project = store.projects[projectIndex];
-  const { name, description, status, dueDate, color } = req.body;
-
-  if (name !== undefined) project.name = name.trim();
-  if (description !== undefined) project.description = description.trim();
-  if (status !== undefined) project.status = status;
-  if (dueDate !== undefined) project.dueDate = dueDate;
-  if (color !== undefined) project.color = color;
-
-  return res.status(200).json({
-    success: true,
-    message: 'Project updated successfully',
-    data: {
-      project,
-    },
-  });
 };
 
-const deleteProject = (req, res) => {
-  const { id } = req.params;
-  const projectIndex = store.projects.findIndex(p => p.id === id);
+const updateProject = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid ID format',
+      });
+    }
 
-  if (projectIndex === -1) {
-    return res.status(404).json({
-      success: false,
-      message: 'Project not found',
+    const { name, description, status, dueDate, color } = req.body;
+    const updates = {};
+    if (name !== undefined) updates.name = name.trim();
+    if (description !== undefined) updates.description = description.trim();
+    if (status !== undefined) updates.status = status;
+    if (dueDate !== undefined) updates.dueDate = dueDate;
+    if (color !== undefined) updates.color = color;
+
+    const project = await Project.findByIdAndUpdate(id, updates, {
+      new: true,
+      returnDocument: 'after',
+      runValidators: true,
     });
+
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Project updated successfully',
+      data: {
+        project,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
+};
 
-  store.projects.splice(projectIndex, 1);
+const deleteProject = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid ID format',
+      });
+    }
 
-  // Delete all tasks belonging to this project
-  store.tasks = store.tasks.filter(
-    task => task.projectId !== id
-  );
+    const project = await Project.findById(id);
+    if (!project) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found',
+      });
+    }
 
-  return res.status(200).json({
-    success: true,
-    message: 'Project and its tasks deleted successfully',
-  });
+    await Task.deleteMany({ project: id });
+    await Project.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Project and its tasks deleted successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 module.exports = {

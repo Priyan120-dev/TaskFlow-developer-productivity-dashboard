@@ -1,141 +1,199 @@
-const store = require('../data/store');
+const mongoose = require('mongoose');
+const Task = require('../models/Task.model');
+const Project = require('../models/Project.model');
 
-const getAllTasks = (req, res) => {
-  const { projectId, status, priority, search } = req.query;
+const getAllTasks = async (req, res, next) => {
+  try {
+    const { projectId, status, priority, search } = req.query;
+    const filter = {};
 
-  const filtered = store.tasks.filter(task => {
-    const matchesProject = projectId
-      ? task.projectId === projectId
-      : true;
-    const matchesStatus = status
-      ? task.status === status
-      : true;
-    const matchesPriority = priority
-      ? task.priority === priority
-      : true;
-    const matchesSearch = search
-      ? task.title.toLowerCase().includes(search.toLowerCase()) ||
-        (task.description && task.description.toLowerCase().includes(search.toLowerCase()))
-      : true;
-    return (
-      matchesProject &&
-      matchesStatus &&
-      matchesPriority &&
-      matchesSearch
-    );
-  });
+    if (projectId && projectId.trim() !== '') {
+      if (mongoose.Types.ObjectId.isValid(projectId.trim())) {
+        filter.project = projectId.trim();
+      } else {
+        return res.status(200).json({
+          success: true,
+          data: {
+            tasks: [],
+            total: 0,
+          },
+        });
+      }
+    }
 
-  return res.status(200).json({
-    success: true,
-    data: {
-      tasks: filtered,
-      total: filtered.length,
-    },
-  });
+    if (status && status.trim() !== '') {
+      filter.status = status.trim();
+    }
+
+    if (priority && priority.trim() !== '') {
+      filter.priority = priority.trim();
+    }
+
+    if (search && search.trim() !== '') {
+      filter.title = { $regex: search.trim(), $options: 'i' };
+    }
+
+    const tasks = await Task.find(filter);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        tasks,
+        total: tasks.length,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-const getTaskById = (req, res) => {
-  const { id } = req.params;
-  const task = store.tasks.find(t => t.id === id);
+const getTaskById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid ID format',
+      });
+    }
 
-  if (!task) {
-    return res.status(404).json({
-      success: false,
-      message: 'Task not found',
+    const task = await Task.findById(id);
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: 'Task not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        task,
+      },
     });
+  } catch (error) {
+    next(error);
   }
-
-  return res.status(200).json({
-    success: true,
-    data: {
-      task,
-    },
-  });
 };
 
-const createTask = (req, res) => {
-  const { title, description, projectId, status, priority, dueDate, assigneeId } = req.body;
+const createTask = async (req, res, next) => {
+  try {
+    const { title, description, projectId, status, priority, dueDate, assigneeId } = req.body;
 
-  const projectExists = store.projects.some(p => p.id === projectId);
-  if (!projectExists) {
-    return res.status(404).json({
-      success: false,
-      message: 'Project not found',
+    if (!projectId || !mongoose.Types.ObjectId.isValid(projectId)) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found',
+      });
+    }
+
+    const projectExists = await Project.findById(projectId);
+    if (!projectExists) {
+      return res.status(404).json({
+        success: false,
+        message: 'Project not found',
+      });
+    }
+
+    let assignee = req.user.id;
+    if (assigneeId && mongoose.Types.ObjectId.isValid(assigneeId)) {
+      assignee = assigneeId;
+    }
+
+    const newTask = await Task.create({
+      title: title ? title.trim() : undefined,
+      description: description ? description.trim() : '',
+      project: projectId,
+      status: status || 'todo',
+      priority: priority || 'medium',
+      dueDate: dueDate || null,
+      assignee,
+      createdBy: req.user.id,
     });
+
+    return res.status(201).json({
+      success: true,
+      message: 'Task created successfully',
+      data: {
+        task: newTask,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
-
-  const newTask = {
-    id: `task-${store.tasks.length + 1}`,
-    title: title.trim(),
-    description: description ? description.trim() : '',
-    projectId,
-    status: status || 'todo',
-    priority: priority || 'medium',
-    dueDate: dueDate || null,
-    assigneeId: assigneeId || (req.user && req.user.id) || 'user-1',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  store.tasks.push(newTask);
-
-  return res.status(201).json({
-    success: true,
-    message: 'Task created successfully',
-    data: {
-      task: newTask,
-    },
-  });
 };
 
-const updateTask = (req, res) => {
-  const { id } = req.params;
-  const taskIndex = store.tasks.findIndex(t => t.id === id);
+const updateTask = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid ID format',
+      });
+    }
 
-  if (taskIndex === -1) {
-    return res.status(404).json({
-      success: false,
-      message: 'Task not found',
+    const { title, description, status, priority, dueDate, assigneeId } = req.body;
+    const updates = {};
+    if (title !== undefined) updates.title = title.trim();
+    if (description !== undefined) updates.description = description.trim();
+    if (status !== undefined) updates.status = status;
+    if (priority !== undefined) updates.priority = priority;
+    if (dueDate !== undefined) updates.dueDate = dueDate;
+    if (assigneeId !== undefined) {
+      updates.assignee = mongoose.Types.ObjectId.isValid(assigneeId) ? assigneeId : null;
+    }
+
+    const task = await Task.findByIdAndUpdate(id, updates, {
+      new: true,
+      returnDocument: 'after',
+      runValidators: true,
     });
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: 'Task not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Task updated successfully',
+      data: {
+        task,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
-
-  const task = store.tasks[taskIndex];
-  const { title, description, status, priority, dueDate, assigneeId } = req.body;
-
-  if (title !== undefined) task.title = title.trim();
-  if (description !== undefined) task.description = description.trim();
-  if (status !== undefined) task.status = status;
-  if (priority !== undefined) task.priority = priority;
-  if (dueDate !== undefined) task.dueDate = dueDate;
-  if (assigneeId !== undefined) task.assigneeId = assigneeId;
-  task.updatedAt = new Date().toISOString();
-
-  return res.status(200).json({
-    success: true,
-    message: 'Task updated successfully',
-    data: {
-      task,
-    },
-  });
 };
 
-const deleteTask = (req, res) => {
-  const { id } = req.params;
-  const taskIndex = store.tasks.findIndex(t => t.id === id);
+const deleteTask = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid ID format',
+      });
+    }
 
-  if (taskIndex === -1) {
-    return res.status(404).json({
-      success: false,
-      message: 'Task not found',
+    const task = await Task.findByIdAndDelete(id);
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: 'Task not found',
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Task deleted successfully',
     });
+  } catch (error) {
+    next(error);
   }
-
-  store.tasks.splice(taskIndex, 1);
-
-  return res.status(200).json({
-    success: true,
-    message: 'Task deleted successfully',
-  });
 };
 
 module.exports = {

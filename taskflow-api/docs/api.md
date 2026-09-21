@@ -3,6 +3,55 @@
 ## Base URL
 http://localhost:5000/api
 
+## New Endpoints Added
+
+### Stats Overview
+GET /api/stats
+
+Response 200:
+```json
+{
+  "success": true,
+  "data": {
+    "users": { "total": 2 },
+    "projects": {
+      "total": 3,
+      "active": 2,
+      "completed": 1
+    },
+    "tasks": {
+      "total": 5,
+      "completed": 2,
+      "inProgress": 1,
+      "todo": 2,
+      "completionRate": 40
+    }
+  }
+}
+```
+
+### Enhanced Health Check
+GET /api/health
+
+Response 200:
+```json
+{
+  "success": true,
+  "status": "ok",
+  "message": "TaskFlow API is running",
+  "timestamp": "2026-09-20T10:00:00.000Z",
+  "environment": "development",
+  "database": "MongoDB Atlas",
+  "version": "1.0.0",
+  "endpoints": {
+    "auth": "/api/auth",
+    "users": "/api/users",
+    "projects": "/api/projects",
+    "tasks": "/api/tasks"
+  }
+}
+```
+
 ## Authentication
 All protected routes require:
 Authorization: Bearer <token>

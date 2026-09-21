@@ -1,3 +1,5 @@
+const jwt = require('jsonwebtoken');
+
 module.exports = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -6,6 +8,7 @@ module.exports = (req, res, next) => {
       message: 'No token provided. Authorization required.',
     });
   }
+
   const token = authHeader.split(' ')[1];
   if (!token || token.trim() === '') {
     return res.status(401).json({
@@ -13,6 +16,19 @@ module.exports = (req, res, next) => {
       message: 'Invalid token format.',
     });
   }
-  req.user = { id: 'user-1', email: 'alex@taskflow.dev' };
-  next();
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role,
+    };
+    next();
+  } catch (error) {
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid or expired token.',
+    });
+  }
 };

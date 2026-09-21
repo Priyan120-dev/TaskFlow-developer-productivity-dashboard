@@ -1,84 +1,88 @@
-const store = require('../data/store');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User.model');
 
-const register = (req, res) => {
-  const { name, email, password } = req.body;
-  const normalizedEmail = email.trim().toLowerCase();
+const register = async (req, res, next) => {
+  try {
+    const { name, email, password, role } = req.body;
+    const normalizedEmail = (email || '').trim().toLowerCase();
 
-  const existingUser = store.users.find(
-    u => u.email.toLowerCase() === normalizedEmail
-  );
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: 'Email already registered',
+      });
+    }
 
-  if (existingUser) {
-    return res.status(409).json({
-      success: false,
-      message: 'Email already registered',
+    const user = await User.create({
+      name: name.trim(),
+      email: normalizedEmail,
+      password,
+      role: role || 'developer',
     });
+
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: 'User registered successfully',
+      data: {
+        token,
+        user,
+      },
+    });
+  } catch (error) {
+    next(error);
   }
-
-  const newUser = {
-    id: `user-${store.users.length + 1}`,
-    name: name.trim(),
-    email: normalizedEmail,
-    passwordHash: `hashed_password_${Date.now()}`,
-    _plainPassword: password,
-    role: 'developer',
-    createdAt: new Date().toISOString(),
-  };
-
-  store.users.push(newUser);
-
-  const { passwordHash, _plainPassword, ...userWithoutPassword } = newUser;
-
-  return res.status(201).json({
-    success: true,
-    message: 'User registered successfully',
-    data: {
-      user: userWithoutPassword,
-    },
-  });
 };
 
-const login = (req, res) => {
-  const { email, password } = req.body;
-  const normalizedEmail = (email || '').trim().toLowerCase();
+const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const normalizedEmail = (email || '').trim().toLowerCase();
 
-  const user = store.users.find(
-    u => u.email.toLowerCase() === normalizedEmail
-  );
+    const user = await User.findOne({ email: normalizedEmail }).select('+password');
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password',
+      });
+    }
 
-  if (!user) {
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid email or password',
-    });
-  }
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password',
+      });
+    }
 
-  const isValidPassword =
-    password === 'password123' ||
-    password === '123456' ||
-    user._plainPassword === password ||
-    user.passwordHash === password;
+    const token = jwt.sign(
+      { id: user._id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
-  if (!isValidPassword) {
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid email or password',
-    });
-  }
-
-  return res.status(200).json({
-    success: true,
-    message: 'Login successful',
-    data: {
-      token: `mock-jwt-token-${user.id}`,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
+    return res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      data: {
+        token,
+        user: {
+          id: user.id || user._id.toHexString(),
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
       },
-    },
-  });
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 module.exports = {
